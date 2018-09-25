@@ -1,0 +1,29 @@
+doctype html
+html(lang="zh-cn" xml:lang="zh-cn")
+  head
+    title Bagazhu
+    link(rel="stylesheet", href="/css/layout.css", data-inline)
+    block page_stylesheets
+  body
+    table.mailBox(width=580)
+      tr
+        td
+          .header.box
+            table
+              tr
+                td
+                  a(href="http://bagazhu.com")
+                    img(src="http://static.bagazhu.com/images/logo/logo-mail-bagazhu-black.png-logoHeight20" width=71 height=20 alt="Bagazhu")
+      tr
+        td
+          block content
+      tr
+        td
+          .footer.box
+            table
+              tr
+                td
+                  p
+                    | 此邮件发给
+                    a(href=`mailto:${name}`) #{name}
+                  p 系统邮件，请勿回复。

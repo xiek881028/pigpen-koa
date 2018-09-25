@@ -1,0 +1,15 @@
+extends ./layout.pug
+
+append page_stylesheets
+  link(rel="stylesheet", href="/css/captcha.css", data-inline)
+
+block content
+  .name #{name},
+  .content
+    p
+      | 您本次申请的操作为&nbsp;
+      span #{mode}
+      | &nbsp;，本次操作的验证码为&nbsp;
+      strong #{captcha}
+      | &nbsp;。
+    p 验证码15分钟内有效，请尽快使用，谢谢。
