@@ -6,7 +6,9 @@ services:
       dockerfile: Dockerfile.development
     restart: unless-stopped
     ports:
-      - 80
+      - 20020:80
+      - 20022:20022
+      - 465:465
     volumes:
       - .:/app
     environment:
@@ -18,13 +20,15 @@ services:
       APP_MONGO: mongodb://username:password@mongo:27017/app?authSource=user
       APP_REDIS_MASTER: redis://redis:6379/0
       APP_SECRET_KEY_BASE: ${APP_SECRET_KEY_BASE}
-      APP_SESSION_KEY: ${APP_SESSION_KEY}
+      # APP_SESSION_KEY: ${APP_SESSION_KEY}
       # APP_SESSION_DOMAIN: ${APP_SESSION_DOMAIN}
   mongo:
     image: mongo:latest
     restart: unless-stopped
     ports:
-      - 27017
+      - 20021:27017
+    volumes:
+      - ./mongoData:/data/db
   redis:
     image: redis:latest
     restart: unless-stopped
