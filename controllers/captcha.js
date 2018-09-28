@@ -23,7 +23,7 @@ router.post('POST_captcha_register', '/register', async (ctx, next) => {
     return;
   } catch (err) {}
   try {
-    await publicFn_node.mailCaptcha(ctx, `${info.mail}-mail-register`, '285985285@qq.com', '注册Bagazhu', '注册');
+    await publicFn_node.mailCaptcha(ctx, `${info.mail}-mail-register`, info.mail, '注册Bagazhu', '注册');
   } catch (err) {
     ctx.status = 403;
     publicFn_node.errAdd(ctx, { error: '邮件发送失败，请联系管理员' });
