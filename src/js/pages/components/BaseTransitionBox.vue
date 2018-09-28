@@ -27,14 +27,14 @@ export default {
 		}
 	},
 	methods: {
-		// afterEnter: function(){
-		// 	this.pageSwitched = true;
-		// 	this.$root.Bus.$emit('pageSwitched', this.pageSwitched);
-		// },
-		// beforeLeave: function(){
-		// 	this.pageSwitched = false;
-		// 	this.$root.Bus.$emit('pageSwitched', this.pageSwitched);
-		// },
+		afterEnter: function(){
+			// this.pageSwitched = true;
+			// this.$root.Bus.$emit('pageSwitched', this.pageSwitched);
+		},
+		beforeLeave: function(){
+			// this.pageSwitched = false;
+			// this.$root.Bus.$emit('pageSwitched', this.pageSwitched);
+		},
 	},
 }
 </script>
