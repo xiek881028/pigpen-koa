@@ -14,7 +14,7 @@ const Koa = require('koa');
 const bodyparser = require('koa-bodyparser');
 // const captcha = require('koa-captcha-v2');
 // const i18n = require('koa-i18n');
-const locale = require('koa-locale');
+// const locale = require('koa-locale');
 const mailer = require('koa-mailer-v2');
 const mongoose = require('mongoose');
 const gridfs = require('mongoose-gridfs');
@@ -56,7 +56,7 @@ log4js.configure({
 app.keys = [process.env.APP_SECRET_KEY_BASE];
 app.context.logger = log4js.getLogger();
 
-locale(app);
+// locale(app);
 
 app
   // 静态文件目录
