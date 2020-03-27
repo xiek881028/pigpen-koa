@@ -10,7 +10,7 @@
 </template>
 
 <script>
-import '@/assets/iconfont/iconfont';
+import '@src/assets/iconfont/iconfont';
 export default{
   props: {
     type: String

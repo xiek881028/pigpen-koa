@@ -5,11 +5,9 @@
  */
 'use strict';
 
-const fs = require('fs-extra');
 const path = require('path');
 const cuid = require('cuid');
 const webpack = require('webpack');
-const pkg = require('./package.json');
 
 const WebpackMiniCssExtractPlugin = require('mini-css-extract-plugin');
 const WebpackHtmlPlugin = require('html-webpack-plugin');
@@ -17,22 +15,8 @@ const WebpackOptimizeCSSAssetsPlugin = require("optimize-css-assets-webpack-plug
 const WebpackUglifyjsPlugin = require('uglifyjs-webpack-plugin');
 const WebpackVueLoaderPlugin = require('vue-loader/lib/plugin');
 
-const out_base_path = 'dist';
-const in_base_path = 'src';
-const base_path = __dirname;
-// const entry_path = `${base_path}/${in_base_path}/js`;
-const output_path = `${base_path}/${out_base_path}/js`;
-
-// let entries = {};
-// fs.readdirSync(entry_path).forEach(filename => {
-//   if (!fs.statSync(`${entry_path}/${filename}`).isFile()) return;
-
-//   let name = path.parse(filename).name;
-//   entries[name] = `${entry_path}/${name}`;
-// });
-
 function resolve(dir) {
-  return path.join(__dirname, '/', dir);
+  return path.join(__dirname, dir);
 }
 
 module.exports = (env, argv) => {
@@ -43,32 +27,30 @@ module.exports = (env, argv) => {
 
   // vue单文件使用
   let entries = {
-    _common: path.resolve(__dirname, 'src/js/common/app.js'),
+    common: path.resolve(__dirname, 'src/js/common/app.js'),
   };
 
   return {
+    mode: argv.mode,
     entry: entries,
     output: {
-      path: output_path,
+      path: resolve('dist'),
       // filename: '[name].js',
       // vue单文件使用
-      filename: this.prod ? `[name].${this.cuid}.js` : `[name].js`,
-      chunkFilename: this.prod ? `chunk[id].${this.cuid}.js` : 'chunk[id].js',
-      publicPath: "js/",
+      filename: this.prod ? `js/[name].[chunkhash].min.js` : `js/[name].js`,
+      chunkFilename: this.prod ? `js/[name].chunk.[chunkhash].min.js` : 'js/[name].chunk.js',
+      publicPath: "../",
     },
     resolve: {
       alias: {
-        // 'vue$': `vue/dist/vue.common.js`,
-        '@': resolve('src'),
+        '@src': resolve('src'),
         '@root': resolve('/'),
       },
-      // extensions: [ '.js', '.web.js', '.webpack.js' ],
     },
     externals: {
       axios: 'axios',
       vue: 'Vue',
       vuex: 'Vuex',
-      json3: 'JSON3',
     },
     module: {
       rules: [
@@ -128,7 +110,8 @@ module.exports = (env, argv) => {
               options: {
                 fallback: 'file-loader',
                 limit: 8192,
-                name: '../images/[name].[ext]',
+                outputPath: 'images/',
+                // name: '../images/[name].[ext]',
               },
             },
           ],
@@ -141,10 +124,11 @@ module.exports = (env, argv) => {
               options: {
                 fallback: 'file-loader',
                 limit: 8192,
-                name: '../fonts/[name].[ext]',
-                publicPath: url => {
-                  return url;
-                }
+                outputPath: 'fonts/',
+                // name: '../fonts/[name].[ext]',
+                // publicPath: url => {
+                //   return url;
+                // }
               },
             },
           ],
@@ -172,12 +156,12 @@ module.exports = (env, argv) => {
               },
             },
             // 集成iview所需
-            {
-              loader: 'iview-loader',
-              options: {
-                prefix: false,
-              },
-            },
+            // {
+            //   loader: 'iview-loader',
+            //   options: {
+            //     prefix: false,
+            //   },
+            // },
           ],
         },
       ],
@@ -188,49 +172,23 @@ module.exports = (env, argv) => {
         new WebpackUglifyjsPlugin({
           parallel: 4,
         }),
-        // new WebpackUglifyjsPlugin({
-        //   uglifyOptions: {
-        //     output: { comments: false },
-        //     ie8: false,
-        //   },
-        // }),
         new WebpackOptimizeCSSAssetsPlugin({
           cssProcessorOptions: { discardComments: { removeAll: true } },
         }),
       ],
-      // splitChunks: {
-      //   cacheGroups: {
-      //     common: {
-      //       chunks: chunk => [ 'api' ].indexOf(chunk.name) == -1,
-      //       minChunks: 2,
-      //       minSize: 1,
-      //       name: 'common',
-      //     },
-      //   },
-      // },
     },
     plugins: [
       new webpack.optimize.OccurrenceOrderPlugin(),
       new WebpackVueLoaderPlugin(),
-      // new WebpackMiniCssExtractPlugin({ filename: '../css/[name].css' }),
-      // vue单文件使用
       new WebpackMiniCssExtractPlugin({
-        chunkFilename: `../css/${this.prod ? `chunk[id].${this.cuid}.css` : `chunk[id].css`}`,
-        filename: `../css/${this.prod ? `[name].${this.cuid}.css` : `[name].css`}`,
+        chunkFilename: `css/${this.prod ? `[name].[contenthash].chunk.min.css` : `[name].chunk.css`}`,
+        filename: `css/${this.prod ? `[name].[contenthash].min.css` : `[name].css`}`,
       }),
     ].concat([
-      // vue单文件使用
       new WebpackHtmlPlugin({
-        title: {
-          min: this.min,
-          cuid: this.prod ? `.${this.cuid}` : '',
-          author: pkg.author,
-          keywords: pkg.keywords.join(', '),
-          description: pkg.description,
-        },
-        template: path.resolve(__dirname, 'src/html/index.pug'),
-        filename: path.resolve(__dirname, out_base_path, 'index.html'),
-        inject: false,
+        template: resolve('src/html/index.pug'),
+        filename: 'index.html',
+        chunks: ['common'],
       }),
     ]
     ),

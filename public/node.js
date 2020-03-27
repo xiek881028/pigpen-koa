@@ -19,7 +19,7 @@ const email = new Email({
   }
 });
 
-module.exports.default = module.exports = {
+module.exports = {
 
   // 添加错误
   errAdd(ctx, err = { default: '系统错误' }, status = 403) {

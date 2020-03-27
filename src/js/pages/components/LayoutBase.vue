@@ -6,88 +6,26 @@
 
 <template lang="pug">
   .RootBox
-    .webBox
-      .header
-        h1
-          router-link(to="/") bagazhu.com
-        .userInfo(v-if="userinfo.mail")
-          .avatar(@click="modalIsShow = true")
-            img(:src="`/api/file/${userinfo.avatar}`" v-if="userinfo.avatar")
-            BaseIcon.avatarIcon(type="icon-iconzhucetouxiang" v-else)
-          .welcome {{userinfo.mail}}
-            Drawer(title="菜单导航" v-model="drawerFlag" :closable="true" :styles="{padding: 0}")
-              CellGroup(@on-click="clickCell")
-                Cell(title="注销" name="logout")
-          Button.userCenter( type="default" ghost @click="drawerFlag = true") 个人中心
-        router-link.login(to="/user/login" v-else) 去登陆
-      .content
-        slot
-      .footer 桂ICP备16001781号
-    UploadAvatar(v-model="modalIsShow" @avatar-ok="avatarOk")
+    slot
 </template>
 
 <script>
-import {
-  Drawer,
-  CellGroup,
-  Cell,
-  Button,
-} from 'iview';
-import BaseIcon from './BaseIcon.vue';
-import api from '@/js/common/api.js';
-import publicFn from '@root/public/index';
-import Cropper from 'cropperjs';
-import UploadAvatar from './BaseUploadAvatar.vue';
+import api from '@src/js/common/api.js';
 export default{
   components: {
-    BaseIcon,
-    Drawer,
-    CellGroup,
-    Cell,
-    Button,
-    UploadAvatar,
   },
   data() {
-    return {
-      userinfo: {},
-      drawerFlag: false,
-      modalIsShow: false,
-    };
+    return {};
   },
   mounted() {
-    let userinfo = localStorage.userinfo;
-    if(userinfo && publicFn.isObject(JSON.parse(userinfo))){
-      this.userinfo = JSON.parse(userinfo);
-    }
   },
   methods: {
-    clickCell(name) {
-      switch (name) {
-        case 'logout':
-          api
-            .logout()
-            .then(res => {
-              this.$Message.success('登出成功');
-              this.$router.push('/user/login');
-            })
-            .catch(err => {
-              this.$Message.error(err.error);
-            })
-            ;
-          break;
-        default:
-          break;
-      }
-    },
-    avatarOk(id) {
-      this.$set(this.userinfo, 'avatar', id);
-    },
   },
 }
 </script>
 
 <style lang="scss" scoped>
-@import '~@/css/_common.scss';
+@import '~@src/css/_common.scss';
 .RootBox{
   position: fixed;
   top: 0;

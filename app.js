@@ -22,7 +22,6 @@ const gridfs = require('mongoose-gridfs');
 const static_middleware = require('koa-static');
 const sass = require('node-sass');
 
-// const ability = require('./ability');
 const controllers = require('./controllers');
 const pkg = require('./package.json');
 const publicFn_node = require('./public/node');
@@ -225,16 +224,6 @@ app
     };
     await next();
   })
-  // 权限控制
-  // .use(rbac({
-  //   rbac: ability,
-  //   identity: ctx => 'Koa',
-  //   // identity: ctx => ctx.user && ctx.user.name,
-  //   // restrictionHandler(ctx, permissions, redirectUrl) {
-  //   //   ctx.status = 403;
-  //   // },
-  // }))
-  // .use(rbac.allow(['read']))
   .use(controllers.routes(), controllers.allowedMethods())
   .use(async ctx => {
     ctx.status = 404;
@@ -251,7 +240,6 @@ development && [
   // 'i18n',
   // 'middlewares',
   'models',
-  // 'ability.js',
   'app.js',
   'public',
   'schema',

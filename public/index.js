@@ -6,7 +6,7 @@
  */
 'use strict';
 
-module.exports.default = module.exports = {
+module.exports = {
 
 	// 数组判断
 	isArray: function (it) {

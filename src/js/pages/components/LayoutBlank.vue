@@ -17,7 +17,7 @@ export default{
 </script>
 
 <style lang="scss" scoped>
-@import '~@/css/_common.scss';
+@import '~@src/css/_common.scss';
 .RootBox{
   position: fixed;
   top: 0;

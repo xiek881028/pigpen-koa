@@ -16,7 +16,7 @@
 
 <script>
 import LayoutBlank from './components/LayoutBlank.vue';
-import Evanyou from '../../assets/evanyou.js';
+import Evanyou from '@src/assets/evanyou.js';
 export default {
   components: {
     LayoutBlank,
@@ -29,7 +29,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import '~@/css/_common.scss';
+@import '~@src/css/_common.scss';
 .indexBox{
   position: absolute;
   top: 0;

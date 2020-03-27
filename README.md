@@ -9,7 +9,7 @@
 cnpm i
 
 # 前端项目依赖资源包引入
-npm run shell -- --init
+npm run init
 
 # 复制docker配置文件（开发 or 生产）
 cp docker-compose.development.yml docker-compose.yml

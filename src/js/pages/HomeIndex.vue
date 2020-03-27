@@ -23,7 +23,7 @@ export default{
 </script>
 
 <style lang="scss" scoped>
-@import '~@/css/_common.scss';
+@import '~@src/css/_common.scss';
 .homeBox{
   color: #1f2f3d;
   h1 {

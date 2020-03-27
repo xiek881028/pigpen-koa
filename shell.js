@@ -9,7 +9,6 @@
 
 const path = require('path');
 const fs = require('fs-extra');
-const dateFormat = require('cainfoharbor-utils/dateFormat');
 const publicFn = require('./public/index');
 const publicFn_node = require('./public/node');
 const argv = require('yargs').argv;
@@ -25,8 +24,6 @@ const assets = {
   vue: { assets: { js: ['dist/vue.min.js', 'dist/vue.js'] } },
   'vue-router': { assets: { js: ['dist/vue-router.min.js', 'dist/vue-router.js'] } },
   axios: { assets: { js: ['dist/axios.min.js', 'dist/axios.js'] } },
-  // 'swagger-ui': { assets: { js: ['dist/swagger-ui.js', 'dist/swagger-ui.js.map'], css: ['dist/swagger-ui.css', 'dist/swagger-ui.css.map'] } },
-  // vuex: { assets: { js: 'dist/vuex.min.js' } },
 };
 
 /* release时需要忽略的dist中的文件或文件夹 */
@@ -34,14 +31,10 @@ const shellignore = ['assets', 'images'];
 
 const outPath = 'dist';
 
-const today = dateFormat('yyyy-MM-dd', new Date());
-
 if (argv.h) {
   console.log(``);
   console.log(`查看帮助： npm run shell -- --h`);
   console.log(`开发环境初始化： npm run shell -- --init`);
-  console.log(`添加页面模块： npm run shell -- --add --name <name>`);
-  console.log(`删除页面模块： npm run shell -- --del --name <name>`);
   console.log(``);
 }
 
@@ -92,79 +85,6 @@ if (argv.init) {
       });
     });
   };
-}
-
-if (argv.add) {
-  if (!argv.name || !argv.name.length) {
-    console.error(`错误: 页面名称不能为空!`);
-  } else {
-    argv.name.split(',').map(name => {
-      let same = 0;
-      publicFn_node.fileTree(path.resolve(__dirname, 'src/html')).map(item => {
-        if (name == path.parse(item).name) same = 1;
-        return;
-      });
-      if (same) {
-        console.error(`错误: ${name} 页面已存在!`);
-      } else {
-        fs.outputFileSync(path.resolve(__dirname, 'src/js/pages', `${name}.vue`),
-          `/*!
-* ${name}
-* create: ${today}
-* since: 0.0.1
-*/
-
-<template lang="pug">
-</template>
-
-<script>
-export default {
-
-components: {},
-
-props: {},
-
-data() {
-  return {};
-},
-
-computed: {},
-
-watch: {},
-
-methods: {},
-
-mounted() {},
-}
-</script>
-
-<style lang="scss" scoped>
-</style>`
-        );
-        console.log(`${name}.vue 创建成功 `);
-      }
-    });
-  }
-}
-
-if (argv.del) {
-  if (!argv.name || !argv.name.length) {
-    console.error(`错误: 页面名称不能为空!`);
-  } else {
-    argv.name.split(',').map(name => {
-      publicFn_node.fileTree(path.resolve(__dirname, 'src/js/pages')).map(item => {
-        if (name == path.parse(item).name) {
-          try {
-            fs.removeSync(item);
-            console.log(`${path.parse(item).base} 删除成功`);
-          } catch (error) {
-            throw error;
-          }
-          return;
-        }
-      });
-    });
-  }
 }
 
 if (argv.release) {

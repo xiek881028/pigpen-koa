@@ -1,4 +1,4 @@
-module.exports = function () {
+export default function () {
 	var c = document.getElementById('evanyou-canvas'),
 		x = c.getContext('2d'),
 		pr = window.devicePixelRatio || 1,
