@@ -28,6 +28,8 @@ const publicFn_node = require('./helper/node');
 const app = module.exports = new Koa();
 const development = app.env === 'development';
 
+const port = process.env.APP_PORT || 80;
+
 log4js.configure({
   appenders: {
     console: { type: 'console' },
@@ -238,7 +240,7 @@ app
   ;
 
 // !module.parent &&
-app.listen(process.env.APP_PORT, () => app.context.logger.info(`${pkg.name} is running${process.env.APP_PORT && ` at ${process.env.APP_PORT}` || ''}.`));
+app.listen(port, () => app.context.logger.info(`${pkg.name} is running at ${port}.`));
 
 // Listener
 development && [
