@@ -9,8 +9,8 @@
 
 const path = require('path');
 const fs = require('fs-extra');
-const publicFn = require('./public/index');
-const publicFn_node = require('./public/node');
+const publicFn = require('./helper/index');
+const publicFn_node = require('./helper/node');
 const argv = require('yargs').argv;
 
 /*

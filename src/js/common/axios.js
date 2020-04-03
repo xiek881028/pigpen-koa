@@ -7,7 +7,7 @@
 
 // js
 import axios from 'axios';
-import publicFn from '@root/public/index';
+import publicFn from '@root/helper/index';
 
 // import 'core-js/fn/promise/finally';
 // import 'core-js/modules/es6.object.assign';

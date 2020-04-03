@@ -39,7 +39,7 @@ module.exports = (env, argv) => {
       // vue单文件使用
       filename: this.prod ? `js/[name].[chunkhash].min.js` : `js/[name].js`,
       chunkFilename: this.prod ? `js/[name].chunk.[chunkhash].min.js` : 'js/[name].chunk.js',
-      publicPath: "../",
+      publicPath: "/",
     },
     resolve: {
       alias: {

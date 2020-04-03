@@ -5,7 +5,6 @@
  */
 'use strict';
 
-const child_process = require('child_process');
 const fs = require('fs-extra');
 const path = require('path');
 const log4js = require('log4js');
@@ -17,14 +16,14 @@ const bodyparser = require('koa-bodyparser');
 // const locale = require('koa-locale');
 const mailer = require('koa-mailer-v2');
 const mongoose = require('mongoose');
-const gridfs = require('mongoose-gridfs');
+const { createModel } = require('mongoose-gridfs');
 // const rbac = require('koa-rbac');
 const static_middleware = require('koa-static');
 const sass = require('node-sass');
 
 const controllers = require('./controllers');
 const pkg = require('./package.json');
-const publicFn_node = require('./public/node');
+const publicFn_node = require('./helper/node');
 
 const app = module.exports = new Koa();
 const development = app.env === 'development';
@@ -84,9 +83,9 @@ app
   })
   .use(async (ctx, next) => {
     // 建立model
-    let gridfsModel = gridfs({
-      mongooseConnection: mongoose.connection
-    }).model;
+    let gridfsModel = createModel({
+      connection: mongoose.connection
+    });
     // 文件写入
     ctx.fileWrite = (file) => {
       return new Promise((resolve, reject) => {
@@ -226,8 +225,15 @@ app
   })
   .use(controllers.routes(), controllers.allowedMethods())
   .use(async ctx => {
-    ctx.status = 404;
-    publicFn_node.errAdd(ctx, { notfound: '接口不存在' }, 404);
+    // 如果访问api不存在，返回接口不存在
+    if(/^(\/api){1}((\/).+)/.test(ctx.originalUrl)) {
+      ctx.status = 404;
+      publicFn_node.errAdd(ctx, { notfound: '接口不存在' }, 404);
+    }else{// 其他情况返回html文件，路由交由前端控制
+      // 单页history模式专用
+      const indexHtml = fs.readFileSync(path.join(__dirname, 'dist', 'index.html'), 'binary');
+      ctx.body = indexHtml;
+    }
   })
   ;
 
@@ -236,26 +242,15 @@ app.listen(process.env.APP_PORT, () => app.context.logger.info(`${pkg.name} is r
 
 // Listener
 development && [
-  'controllers',
-  // 'i18n',
-  // 'middlewares',
-  'models',
-  'app.js',
-  'public',
-  'schema',
   'emails/scss',
 ].forEach(_filename => {
   fs.watch(_filename, { recursive: true }, (eventType, filename) => {
     app.context.logger.info(`${filename}: ${eventType}`);
     // 将emails下的scss文件编译成css文件
-    if (_filename == 'emails/scss') {
-      let result = sass.renderSync({
-        file: `emails/scss/${filename}`,
-        outputStyle: 'compressed',
-      });
-      fs.outputFileSync(`emails/css/${path.basename(filename, '.scss')}.css`, result.css);
-    } else {
-      child_process.exec('touch ./tmp/restart.txt');
-    }
+    let result = sass.renderSync({
+      file: `emails/scss/${filename}`,
+      outputStyle: 'compressed',
+    });
+    fs.outputFileSync(`emails/css/${path.basename(filename, '.scss')}.css`, result.css);
   });
 });

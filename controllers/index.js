@@ -1,15 +1,9 @@
-/*!
- * Controllers
- * xiewulong <xiewulong@vip.qq.com>
- * create: 2017/12/13
- * since: 0.0.1
- */
 'use strict';
 
 const Router = require('koa-router');
 // const pkg = require('../package.json');
 
-const router = module.exports = new Router();
+const router = new Router();
 
 [
   require('./file'),
@@ -19,3 +13,5 @@ const router = module.exports = new Router();
 ].forEach(controller => router.use(controller.routes(), controller.allowedMethods()));
 
 router.prefix('/api');
+
+module.exports = router;

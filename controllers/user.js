@@ -13,8 +13,8 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const router = module.exports = new Router();
 
-const authenticate = require('../public/authenticate');
-const publicFn_node = require('../public/node');
+const authenticate = require('../helper/authenticate');
+const publicFn_node = require('../helper/node');
 
 router.prefix('/user');
 

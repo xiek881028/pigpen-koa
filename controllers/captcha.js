@@ -9,7 +9,7 @@ const Router = require('koa-router');
 const router = module.exports = new Router();
 
 const User = require('../models/user');
-const publicFn_node = require('../public/node');
+const publicFn_node = require('../helper/node');
 
 router.prefix('/captcha');
 

@@ -1,20 +1,23 @@
 version: '3'
 services:
   web:
-    image: ${APP_IMAGE_HOST}/koa-app:latest
+    image: ${APP_IMAGE_HOST}:latest
     restart: unless-stopped
     ports:
       - 80
     volumes:
       - ./log:/app/log
       - ./tmp:/app/tmp
+      #   暴露备份文件给js调用
+      # - production/db/mongoBackups:/dbData/backups
     environment:
+      APP_PORT: 80
       APP_MAILER_FROM: ${APP_MAILER_FROM}
       APP_MAILER_SMTP_ADDRESS: ${APP_MAILER_SMTP_ADDRESS}
       APP_MAILER_SMTP_PORT: ${APP_MAILER_SMTP_PORT}
       APP_MAILER_SMTP_USERNAME: ${APP_MAILER_SMTP_USERNAME}
       APP_MAILER_SMTP_PASSWORD: ${APP_MAILER_SMTP_PASSWORD}
-      APP_MONGO: mongodb://username:password@mongo:27017/app?authSource=user
+      APP_MONGO: mongodb://mongo:27017/app
       APP_REDIS_MASTER: redis://redis:6379/0
       APP_SECRET_KEY_BASE: ${APP_SECRET_KEY_BASE}
       # APP_SESSION_KEY: ${APP_SESSION_KEY}
@@ -25,6 +28,11 @@ services:
     restart: unless-stopped
     ports:
       - 27017
+    # volumes:
+      # 按需要暴露数据库文件
+      # - /home/xiekai/com.bagazhu/production/db/mongoData:/data/db
+    #   暴露备份文件方便发送备份数据
+    #   - /home/xiekai/com.bagazhu/production/db/mongoBackups:/data/backups
   redis:
     image: redis:latest
     restart: unless-stopped

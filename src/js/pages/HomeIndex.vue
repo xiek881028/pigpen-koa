@@ -26,6 +26,7 @@ export default{
 @import '~@src/css/_common.scss';
 .homeBox{
   color: #1f2f3d;
+  flex-direction: column;
   h1 {
     font-size: 24px;
     font-weight: 400;
