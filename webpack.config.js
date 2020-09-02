@@ -6,7 +6,6 @@
 'use strict';
 
 const path = require('path');
-const cuid = require('cuid');
 const webpack = require('webpack');
 
 const WebpackMiniCssExtractPlugin = require('mini-css-extract-plugin');
@@ -23,7 +22,6 @@ module.exports = (env, argv) => {
 
   this.prod = argv.mode == 'production';
   this.min = this.prod ? '.min' : '';
-  this.cuid = cuid();
 
   // vue单文件使用
   let entries = {
@@ -33,6 +31,36 @@ module.exports = (env, argv) => {
   return {
     mode: argv.mode,
     entry: entries,
+    stats: {
+      // assets: false,
+      // moduleAssets: false,
+      // cached: false,
+      // cachedAssets: false,
+      children: false,
+      // chunks: false,
+      // chunkGroups: false,
+      // chunkModules: false,
+      // chunkRootModules: false,
+      // chunkOrigins: false,
+      // entrypoints: false,
+      // loggingTrace: false,
+      modules: false,
+      moduleTrace: false,
+      // performance: false,
+      // reasons: false,
+      colors: true,
+      // children: false,
+      // entrypoints: true,
+      // moduleAssets: false,
+      // chunks: false,
+      // chunkGroups: false,
+      // cachedAssets: false,
+      // reasons: false,
+      warningsFilter: [
+        // 忽略理由：https://github.com/webpack-contrib/mini-css-extract-plugin/issues/250
+        'Conflicting order between:',
+      ],
+    },
     output: {
       path: resolve('dist'),
       // filename: '[name].js',
@@ -50,7 +78,7 @@ module.exports = (env, argv) => {
     externals: {
       axios: 'axios',
       vue: 'Vue',
-      vuex: 'Vuex',
+      vueRouter: 'VueRouter',
     },
     module: {
       rules: [
@@ -80,15 +108,6 @@ module.exports = (env, argv) => {
           ],
         },
         {
-          test: /\.scss$/,
-          use: [
-            WebpackMiniCssExtractPlugin.loader,
-            'css-loader?sourceMap',
-            'postcss-loader?sourceMap',
-            'sass-loader?sourceMap',
-          ],
-        },
-        {
           test: /\.less$/,
           use: [
             WebpackMiniCssExtractPlugin.loader,
@@ -100,7 +119,7 @@ module.exports = (env, argv) => {
         {
           test: /\.js?$/,
           use: ['babel-loader'],
-          exclude: /node_modules/,
+          // exclude: /node_modules/,
         },
         {
           test: /\.(gif|jpe?g|png)(\?.*)?$/,
@@ -140,12 +159,6 @@ module.exports = (env, argv) => {
               loader: 'vue-loader',
               options: {
                 loaders: {
-                  scss: [
-                    WebpackMiniCssExtractPlugin.loader,
-                    'css-loader?sourceMap',
-                    'postcss-loader?sourceMap',
-                    'sass-loader?sourceMap',
-                  ],
                   less: [
                     WebpackMiniCssExtractPlugin.loader,
                     'css-loader?sourceMap',

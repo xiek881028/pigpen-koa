@@ -1,6 +1,6 @@
 module.exports = {
   apps: [{
-      name: 'mm',
+      name: 'piggen-koa',
       script: 'app.js',
       // instances: 2,
       watch: true,
@@ -12,6 +12,7 @@ module.exports = {
         'temp',
         'Dockerfile*',
         'docker*',
+        '*.md',
       ],
       // cron_restart: '0 2 * * *', // 每天凌晨两点重启
       // max_memory_restart: '500M',

@@ -69,3 +69,7 @@ dist
 
 # mongodb
 mongoData
+mongoBackups
+
+# yarn
+yarn.lock

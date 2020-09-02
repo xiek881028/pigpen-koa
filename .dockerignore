@@ -67,3 +67,8 @@ docker-compose.yml
 .git
 log
 tmp
+
+# mongo
+mongoData
+mongoBackups
+

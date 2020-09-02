@@ -1,0 +1,16 @@
+{
+  "id": "1722853",
+  "name": "装修后台管理系统",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon",
+  "description": "",
+  "glyphs": [
+    {
+      "icon_id": "7936122",
+      "name": "欢迎页icon",
+      "font_class": "huanyingyeicon",
+      "unicode": "e6df",
+      "unicode_decimal": 59103
+    }
+  ]
+}

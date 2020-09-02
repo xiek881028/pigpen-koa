@@ -8,25 +8,25 @@
 const fs = require('fs-extra');
 const path = require('path');
 const log4js = require('log4js');
+const stream = require('stream');
 // const yaml = require('js-yaml');
 const Koa = require('koa');
 const bodyparser = require('koa-bodyparser');
 // const captcha = require('koa-captcha-v2');
 // const i18n = require('koa-i18n');
 // const locale = require('koa-locale');
-const mailer = require('koa-mailer-v2');
+// const mailer = require('koa-mailer-v2');
 const mongoose = require('mongoose');
 const { createModel } = require('mongoose-gridfs');
 // const rbac = require('koa-rbac');
 const static_middleware = require('koa-static');
-const sass = require('node-sass');
-
+// const sass = require('node-sass');
 const controllers = require('./controllers');
 const pkg = require('./package.json');
 const publicFn_node = require('./helper/node');
-
 const app = module.exports = new Koa();
 const development = app.env === 'development';
+const etag = require('koa-etag');
 
 const port = process.env.APP_PORT || 80;
 
@@ -55,10 +55,32 @@ log4js.configure({
 
 app.keys = [process.env.APP_SECRET_KEY_BASE];
 app.context.logger = log4js.getLogger();
+// 获取用户真实ip
+app.proxy = true;
 
 // locale(app);
 
 app
+  // 使用304缓存，放在最前面，保证所有的返回资源都可以利用缓存
+  .use(async (ctx, next) => {
+    await next();
+    // 请求协议缓存，返回304
+    if (ctx.fresh) {
+      ctx.status = 304;
+      ctx.body = null;
+    }
+    // 借鉴egg.js的缓存时间(触发强缓存，优先级高于协议缓存)
+    // prod可用 强行使用缓存，开发环境使用会导致文件变化无法更新
+    // ctx.res.setHeader('Cache-Control', 'public, max-age=31536000');
+    // dev可用 删除强缓存规则，交由浏览器控制
+    ctx.res.removeHeader('Cache-Control');
+    // api请求不进行缓存，删除缓存规则(测试是否需要)
+    if (/^(\/api){1}/.test(ctx.request.url)) {
+      ctx.res.removeHeader('ETag');
+      ctx.res.removeHeader('Cache-Control');
+    }
+  })
+  .use(etag())
   // 静态文件目录
   .use(static_middleware('dist', {
     // br: true,              // Try to serve the brotli version of a file automatically when brotli is supported by a client and if the requested file with .br extension exists (note, that brotli is only accepted over https)
@@ -75,9 +97,12 @@ app
     let start = Date.now();
     try {
       await mongoose.connect(process.env.APP_MONGO, {
+        useFindAndModify: false,
+        useUnifiedTopology: true,
         useNewUrlParser: true,
+        useCreateIndex: true,
       });
-      ctx.logger.info(`Mongoose connection open to ${process.env.APP_MONGO} - ${Date.now() - start}ms`);
+      // ctx.logger.info(`Mongoose connection open to ${process.env.APP_MONGO} - ${Date.now() - start}ms`);
     } catch (error) {
       ctx.logger.info(`Mongoose connection error: ${error} - ${Date.now() - start}ms`);
     }
@@ -90,13 +115,17 @@ app
     });
     // 文件写入
     ctx.fileWrite = (file) => {
+      // buffer 转 stream
+      const _stream = new stream.Duplex();
+      _stream.push(file.buffer);
+      _stream.push(null);
       return new Promise((resolve, reject) => {
         gridfsModel.write(
           {
-            filename: file.filename,
+            filename: file.originalname,
             contentType: file.mimetype,
           },
-          fs.createReadStream(file.path),
+          _stream,
           (err, createdFile) => {
             if (err != null) {
               reject(err);
@@ -105,21 +134,16 @@ app
             }
           }
         );
-        fs.unlink(ctx.req.file.path, err => { });
       });
     }
-    // 文件读取
-    ctx.fileRead = objectid => {
-      return gridfsModel.readById(objectid);
-    }
-    // 根据id查找文件
-    ctx.fileFindById = (objectid, field) => {
+    // 根据id查找文件 文件正文用attachment.read()获取
+    ctx.fileFindById = (objectid) => {
       return new Promise((resolve, reject) => {
-        gridfsModel.findById(objectid, field).exec((err, adventure) => {
-          if (err) {
-            reject(err);
+        gridfsModel.findById(objectid, (error, attachment) => {
+          if (error) {
+            reject(error);
           } else {
-            resolve(adventure);
+            resolve(attachment);
           }
         });
       });
@@ -169,20 +193,20 @@ app
   //   ],
   // }))
   // 邮件服务
-  .use(mailer({
-    from: process.env.APP_MAILER_FROM,
-    host: process.env.APP_MAILER_SMTP_ADDRESS,
-    port: process.env.APP_MAILER_SMTP_PORT,
-    secure: true,
-    auth: {
-      user: process.env.APP_MAILER_SMTP_USERNAME,
-      pass: process.env.APP_MAILER_SMTP_PASSWORD,
-    },
-    logger: false,
-    debug: false,
-    test: false,
-    // test: true,
-  }))
+  // .use(mailer({
+  //   from: process.env.APP_MAILER_FROM,
+  //   host: process.env.APP_MAILER_SMTP_ADDRESS,
+  //   port: process.env.APP_MAILER_SMTP_PORT,
+  //   secure: true,
+  //   auth: {
+  //     user: process.env.APP_MAILER_SMTP_USERNAME,
+  //     pass: process.env.APP_MAILER_SMTP_PASSWORD,
+  //   },
+  //   logger: false,
+  //   debug: false,
+  //   test: false,
+  //   // test: true,
+  // }))
   // 图形验证码
   // .use(captcha({
   //   // background: '#fff',       // Background color, default: white
@@ -203,35 +227,39 @@ app
   //   // type: 'character',        // Captcha type, default: random character
   //   // width: 160,               // Width, default: 160
   // }))
-  // request数据格式化方法
+  // 组合requset.body 与已有数据
   .use(async (ctx, next) => {
-    ctx.request.permit = (names = [], defaults = {}) => {
-      if (!ctx.request.body || !Object.keys(ctx.request.body).length) {
+    ctx.request.permit = (names, defaults = {}) => {
+      // 没有request.body或names 直接返回已有数据
+      if (!names || !ctx.request.body || !Object.keys(ctx.request.body).length) {
         return defaults;
       }
 
       let params = {};
-      for (let name, param, i = 0, len = names.length; i < len; i++) {
-        name = names[i];
-        param = ctx.request.body[name];
-        if (param === undefined) {
-          continue;
+      if (names.length) {
+        for (let name, param, i = 0, len = names.length; i < len; i++) {
+          name = names[i];
+          param = ctx.request.body[name];
+          if (param === undefined) {
+            continue;
+          }
+          params[name] = param;
         }
-
-        params[name] = param;
+        return { ...params, ...defaults };
+      } else {
+        // names为[]，将所有request.body组合进default
+        return { ...ctx.request.body, ...defaults };
       }
-
-      return { ...params, ...defaults };
     };
     await next();
   })
   .use(controllers.routes(), controllers.allowedMethods())
   .use(async ctx => {
     // 如果访问api不存在，返回接口不存在
-    if(/^(\/api){1}((\/).+)/.test(ctx.originalUrl)) {
+    if (/^(\/api){1}((\/).+)/.test(ctx.originalUrl)) {
       ctx.status = 404;
-      publicFn_node.errAdd(ctx, { notfound: '接口不存在' }, 404);
-    }else{// 其他情况返回html文件，路由交由前端控制
+      publicFn_node.errAdd(ctx, '接口不存在', 404);
+    } else {// 其他情况返回html文件，路由交由前端控制
       // 单页history模式专用
       const indexHtml = fs.readFileSync(path.join(__dirname, 'dist', 'index.html'), 'binary');
       ctx.body = indexHtml;
@@ -249,10 +277,10 @@ development && [
   fs.watch(_filename, { recursive: true }, (eventType, filename) => {
     app.context.logger.info(`${filename}: ${eventType}`);
     // 将emails下的scss文件编译成css文件
-    let result = sass.renderSync({
-      file: `emails/scss/${filename}`,
-      outputStyle: 'compressed',
-    });
-    fs.outputFileSync(`emails/css/${path.basename(filename, '.scss')}.css`, result.css);
+    // let result = sass.renderSync({
+    //   file: `emails/scss/${filename}`,
+    //   outputStyle: 'compressed',
+    // });
+    // fs.outputFileSync(`emails/css/${path.basename(filename, '.scss')}.css`, result.css);
   });
 });

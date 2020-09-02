@@ -16,8 +16,8 @@ export default{
 }
 </script>
 
-<style lang="scss" scoped>
-@import '~@src/css/_common.scss';
+<style lang="less" scoped>
+@import '~@src/css/common.less';
 .RootBox{
   position: fixed;
   top: 0;

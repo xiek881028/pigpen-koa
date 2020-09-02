@@ -1,0 +1,2 @@
+0 4 * * * /home/xiekai/com.pigpen/cron/mongodb_bak.sh prod 2> /home/xiekai/com.pigpen/cron/logs &
+5 4 * * 7 env=production /usr/local/node/bin/node /home/xiekai/com.pigpen/cron/sendBakMaill.js 2> /home/xiekai/com.pigpen/cron/logs &

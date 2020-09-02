@@ -8,23 +8,19 @@
 const fs = require('fs-extra');
 const path = require('path');
 const redis = require('redis');
-const Email = require('email-templates');
-const email = new Email({
-  juice: true,
-  juiceResources: {
-    preserveImportant: true,
-    webResources: {
-      relativeTo: path.resolve('emails'),
-    },
-  }
-});
+const crypto = require('crypto');
+const moment = require('moment');
+const { isArray, isObject } = require('./index');
 
 module.exports = {
 
   // 添加错误
-  errAdd(ctx, err = { default: '系统错误' }, status = 403) {
+  errAdd(ctx, message = '系统错误', status = 403) {
     ctx.status = status;
-    ctx.body = err;
+    ctx.body = {
+      flag: false,
+      message,
+    };
   },
 
   // 循环指定目录，输出目录内所有文件列表的数组
@@ -52,51 +48,148 @@ module.exports = {
     return fileList;
   },
 
-  // 邮件发送
-  mail(ctx, to, subject, pug, attr = {}) {
-    return new Promise(async (resolve, reject) => {
-      ctx.mailer({
-        to,
-        subject,
-        html: await email.render(pug, attr),
-      }, (err, info, nodemailer) => {
-        if (err) {
-          return reject(err);
-        }
-        resolve(nodemailer.getTestMessageUrl(info));
-      });
-    });
-  },
-
-  // 发送验证码邮件
-  mailCaptcha(ctx, name, to, subject, mode) {
-    return new Promise(async (resolve, reject) => {
-      let captcha = Math.random().toFixed(6).replace(/^[\s\S](.)/, '');
-      try {
-        await this.captcha(name, captcha);
-        await this.mail(ctx, to, subject, 'html/captcha', {
-          name: to,
-          mode,
-          captcha,
-        });
-        resolve();
-      } catch (err) {
-        reject(err);
-      }
-    });
-  },
-
-  // 验证码存redis，默认session过期时间为15分钟
-  captcha(name, captcha, timeout_in = 1000 * 60 * 15) {
+  // redis set hash
+  redisSet(name, data, ops = {}) {
     return new Promise((resolve, reject) => {
       let client = redis.createClient(process.env.APP_REDIS_MASTER);
-      client.hmset(name, {captcha}, (err, res) => {
+      client.set(name, data, (err, res) => {
         if (err) {
           return reject(err);
         }
-        client.pexpire(name, timeout_in);
-        resolve();
+        // 有更新时间，续约
+        ops.timeout_in != undefined && client.pexpire(name, ops.timeout_in);
+        resolve(res);
       });
     });
+  },
+
+  // redis get hash
+  redisGet(name) {
+    return new Promise((resolve, reject) => {
+      let client = redis.createClient(process.env.APP_REDIS_MASTER);
+      client.get(name, (err, res) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve(res);
+      });
+    });
+  },
+
+  // redis rm hash
+  redisRemove(name) {
+    return new Promise((resolve, reject) => {
+      let client = redis.createClient(process.env.APP_REDIS_MASTER);
+      client.del(name, (err, res) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve(res);
+      });
+    });
+  },
+
+  // 设置允许上传文件类型
+  fileFilter(types = []) {
+    let type = new Set(types);
+    return (req, file, cb) => {
+      if (!type.has(file.mimetype)) {
+        let error = new Error('文件格式不支持');
+        error.code = 'ERROR_TYPE';
+        cb(error);
+      } else {
+        cb(null, true);
+      }
+    };
+  },
+
+  // 删除文件
+  delFiles(list = []) {
+    if (typeof (list) == 'String') {
+      fs.remove(list);
+    } else if (isArray(list)) {
+      list.map(item => {
+        fs.remove(item);
+      });
+    } else if (isObject(list)) {
+      Object.keys(list).map(item => {
+        fs.remove(list[item]);
+      });
+    } else {
+      return new Error('删除对象类型只能为string、array、object');
+    }
+  },
+
+  // 生成指定位数随机byte
+  randomBytes(num = 28) {
+    return new Promise((resolve, reject) => {
+      crypto.randomBytes(num, (err, buf) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(buf.toString('hex'));
+        }
+      });
+    });
+  },
+
+  // 权限生成树形结构
+  permissionTree(list = [], ops = {}) {
+    if(!list.length) return [];
+    const defaultOps = {
+      emptyGroup: [],
+      sort: [],
+    };
+    let _list = [].concat(list);
+    const { emptyGroup, sort } = { ...defaultOps, ...ops };
+    if (emptyGroup.length) {
+      const emptyArr = [];
+      for (let i = 0; i < emptyGroup.length; i++) {
+        const el = emptyGroup[i];
+        emptyArr.push({
+          groupName: el.name,
+          group: el.id,
+        });
+      }
+      _list = _list.concat(emptyArr);
+    }
+    const tempJson = {};
+    const out = [];
+    for (let i = 0; i < _list.length; i++) {
+      const { group, groupName, code, name, id } = _list[i];
+      if (!tempJson[group]) {
+        tempJson[group] = {
+          groupName,
+          group,
+          children: [],
+        };
+      }
+      id && tempJson[group].children.push({
+        code,
+        name,
+        id,
+      });
+    }
+    if (sort.length) {
+      for (let i = 0; i < sort.length; i++) {
+        const el = sort[i];
+        tempJson[el.id] && out.push(tempJson[el.id]);
+      }
+    } else {
+      for (let item in tempJson) {
+        out.push(tempJson[item]);
+      }
+    }
+    return out;
+  },
+
+  // 危险操作，写入日志文件
+  warningConsole(a, b) {
+    let log = b ? b : a;
+    const dir = path.join(__dirname, '../', 'log/warningConsole.log');
+    const message = `${moment().format('YYYY-MM-DD hh:mm:ss')}  ${log}`;
+    b ? console.warn(a, b) : console.warn(a);
+    fs.ensureFileSync(dir);
+    fs.appendFileSync(dir, `${message} \n`);
   },
 }

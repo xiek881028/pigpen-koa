@@ -1,8 +1,6 @@
 # piggen-koa
 
-整合koa-app 与 piggen-vue
-
-自用快拆脚手架
+基于koa并整合vue的自用脚手架
 
 ## 开发
 
@@ -111,3 +109,10 @@ docker-compose up -d
 # 停止容器组
 docker-compose down
 ```
+
+## 未完成的工作
+
+1. test单元测试未更新
+2. emails邮件服务未更新
+3. i18n国际化服务未更新
+4. captcha图形验证码服务未更新

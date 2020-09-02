@@ -7,30 +7,34 @@ services:
     restart: unless-stopped
     ports:
       # web服务
-      - 20020:80
+      - 20040:80
     volumes:
       - .:/app
     environment:
       APP_PORT: 80
-      APP_MAILER_FROM: ${APP_MAILER_FROM}
-      APP_MAILER_SMTP_ADDRESS: ${APP_MAILER_SMTP_ADDRESS}
-      APP_MAILER_SMTP_PORT: ${APP_MAILER_SMTP_PORT}
-      APP_MAILER_SMTP_USERNAME: ${APP_MAILER_SMTP_USERNAME}
-      APP_MAILER_SMTP_PASSWORD: ${APP_MAILER_SMTP_PASSWORD}
+      # APP_MAILER_FROM: ''
+      # APP_MAILER_SMTP_ADDRESS: ''
+      # APP_MAILER_SMTP_PORT: 465
+      # APP_MAILER_SMTP_USERNAME: ''
+      # APP_MAILER_SMTP_PASSWORD: ''
       APP_MONGO: mongodb://mongo:27017/app
       APP_REDIS_MASTER: redis://redis:6379/0
-      APP_SECRET_KEY_BASE: ${APP_SECRET_KEY_BASE}
+      APP_SECRET_KEY_BASE: ''
       # APP_SESSION_KEY: ${APP_SESSION_KEY}
       # APP_SESSION_DOMAIN: ${APP_SESSION_DOMAIN}
+    container_name: com.pigpen.dev
   mongo:
     image: mongo:latest
     restart: unless-stopped
     ports:
-      - 20021:27017
-    # volumes:
-    #   - ./mongoData:/data/db
+      - 20041:27017
+    container_name: com.pigpen.mongo.dev
+    volumes:
+      - ./mongoData:/data/db
+      - ./mongoBackups:/data/backups
   redis:
     image: redis:latest
     restart: unless-stopped
     ports:
       - 6379
+    container_name: com.pigpen.redis.dev

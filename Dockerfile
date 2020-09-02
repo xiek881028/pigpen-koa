@@ -12,6 +12,9 @@ CMD ["npm", "run", "app"]
 
 WORKDIR /app
 ADD . .
-RUN cnpm i \
+RUN yarn \
     && npm run init \
-    && npm run build
+    && npm run release \
+    && rm -rf node_modules \
+    && yarn install --prod \
+    && yarn cache clean

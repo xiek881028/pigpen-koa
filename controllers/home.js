@@ -1,9 +1,3 @@
-/*!
- * Home
- * xiewulong <xiewulong@vip.qq.com>
- * create: 2017/12/13
- * since: 0.0.1
- */
 'use strict';
 
 const Router = require('koa-router');
@@ -12,6 +6,19 @@ const router = module.exports = new Router();
 
 router.prefix('/home');
 
+router.options('aaa_1', '/aaa', ctx => {
+	console.log(ctx.request)
+	ctx.header['Access-Control-Allow-Credentials'] = true;
+	ctx.header['Access-Control-Allow-Headers'] = 'x-requested-with';
+	ctx.header['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, HEADER, PATCH, OPTIONS';
+	ctx.header['Access-Control-Allow-Origin'] = 'http://10.8.10.104:3001';
+	ctx.body = 'ok';
+});
+
+router.post('aaa', '/aaa', (ctx, next) => {
+	console.log(ctx.request);
+	ctx.body = 'success';
+});
 // GET /home/mailer
 // Router.api.tags.push({ name: '/home/mailer', description: '邮件发送', externalDocs: { description: '链接', url: '/home/mailer' } });
 // router.get( 'GET_home_hello', '/mailer',
