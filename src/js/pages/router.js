@@ -1,6 +1,7 @@
 const LayoutAdmin = () => import('./components/LayoutAdmin.vue'); // 后台layout
 const Welcome = () => import('./Welcome/index.vue'); // 欢迎页
 const UserLogin = () => import('./Login/index.vue'); // 登录页
+const Demo = () => import('./Demo/index.vue'); // 样例页
 const BaseNotFound = () => import('./NotFound/index.vue'); // 404页
 const SystemMgrUser = () => import('./SystemMgr/user.vue'); // 用户配置页
 const SystemMgrRole = () => import('./SystemMgr/role.vue'); // 角色配置页
@@ -17,6 +18,11 @@ export const routes = [
         path: '',
         component: Welcome,
         meta: { title: `首页 - ${Title}`, permission: 'login' },
+      },
+      {
+        path: '/demo',
+        component: Demo,
+        meta: { title: `样例 - ${Title}`, permission: 'login' },
       },
       {
         path: '/systemMgr/user',
@@ -41,8 +47,14 @@ export const routes = [
 
 export const menu = [
   {
-    name: "平台配置",
+    name: "样例",
     key: "1",
+    icon: "setting",
+    url: "/demo"
+  },
+  {
+    name: "平台配置",
+    key: "2",
     icon: "setting",
     children: [
       {

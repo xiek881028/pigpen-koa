@@ -4,12 +4,17 @@
       .scroll-wrap
         .logo
         Menu(mode="inline" :selectedKeys="activeKey" :defaultOpenKeys="activePKey")
-          SubMenu(key='1' v-for="item in roleMenuList" :key="item.key")
-            span(slot="title")
-              Icon(:type='item.icon')
-              | {{item.name}}
-            MenuItem(v-for="child in item.children" :key='`${item.key}-${child.key}`')
-              router-link(:to="child.url") {{child.name}}
+          template(v-for="item in roleMenuList")
+            MenuItem(:key='item.key' v-if="item.url")
+              router-link(:to="item.url")
+                Icon(:type='item.icon')
+                span {{item.name}}
+            SubMenu(v-else :key="item.key")
+              span(slot="title")
+                Icon(:type='item.icon')
+                | {{item.name}}
+              MenuItem(v-for="child in item.children" :key='`${item.key}-${child.key}`')
+                router-link(:to="child.url") {{child.name}}
     Layout.content-wrap(id='admin-layout-body')
       Header.header
         .avatar-wrap
@@ -75,8 +80,8 @@ export default {
     roleMenuList() {
       let out = [];
       this.menuList.map((item) => {
-        const { name, key, icon } = item;
-        let pJson = { name, key, icon };
+        const { name, key, icon, url } = item;
+        let pJson = { name, key, icon, url };
         if (item.children && item.children.length) {
           item.children.map((child) => {
             if (hasPermissionSync(child.permission)) {
@@ -92,10 +97,9 @@ export default {
           });
           pJson.children && out.push(pJson);
         } else {
-          if (hasPermissionSync(item.permission)) {
+          if(item.permission === undefined || hasPermissionSync(item.permission)) {
             out.push(pJson);
           }
-          // out.push(pJson);
         }
       });
       return out;
@@ -210,8 +214,8 @@ export default {
       .logo {
         height: 68px;
         margin: 12px;
-        background: url("~@src/assets/images/logo.png");
-        background-size: 100%;
+        background: url("~@src/assets/images/logo.png") center no-repeat;
+        background-size: cover;
       }
     }
   }
