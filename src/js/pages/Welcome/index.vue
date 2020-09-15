@@ -5,10 +5,10 @@
 */
 
 <template lang="pug">
-  .welcome-wrap
-    .icon-wrap
-      IconFont.font(type="iconhuanyingyeicon")
-    h1 欢迎使用八嘎猪系统~
+.welcome-wrap
+  .icon-wrap
+    IconFont.font(type="iconhuanyingyeicon")
+  h1 欢迎使用八嘎猪系统~
 </template>
 
 <script>

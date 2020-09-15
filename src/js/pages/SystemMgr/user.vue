@@ -1,67 +1,69 @@
 <template lang="pug">
-  .wrap
-    Breadcrumb
-      BreadcrumbItem 平台配置
-      BreadcrumbItem 用户配置
-    PageHeader.pageHeader(title="用户配置" subTitle="配置平台用户信息。")
-      .tags
-        Tag(color="red") 新建用户默认无权限（无法登陆）
-        Tag(color="cyan") 用户停用后直接禁止登录
-        Tag(color="orange") 危险操作，疑问请咨询管理员
-      template(slot="extra")
-        BasePermission(permission="add_user")
-          Button(type="primary" icon="plus" @click="add") 新增
-    BasePermission(permission="find_user")
-      Result(slot="fail" status="403" title="403" sub-title="对不起，您没有权限查看。")
-      .user-wrap
-        Table.table(
-          size="middle"
-          :columns="columns"
-          :dataSource="tabData"
-          :loading="isLoading"
-          rowKey="username"
-          :pagination="false"
-        )
-          template(slot="role" slot-scope="record")
-            Tag(v-for="item in record.role" color="#87d068" :key="item.name") {{item.name}}
-          template(slot="state" slot-scope="record")
-            span.state(:class="{success: record.using}") {{record.using ? '启用' : '停用'}}
-          template(slot="action" slot-scope="record")
-            .btn-wrap
-              BasePermission(permission="reset_user_pwd")
-                Popconfirm(
-                  :title="`重置后将生成随机密码，确定重置密码吗？`"
-                  ok-text="确认"
-                  cancel-text="取消"
-                  @confirm="resetPwd(record.id)"
-                )
-                  Button.btn(size="small") 重置密码
-              BasePermission(permission="edit_user_role")
-                Button(type="primary" size="small" @click="addRole(record.id)") 绑定角色
-              BasePermission(permission="edit_user_using")
-                Popconfirm(
-                  :title="`${record.using ? '停用后账号将无法登录！' : ''}确定${usingText(record.using)}选中的用户吗？`"
-                  ok-text="确认"
-                  cancel-text="取消"
-                  @confirm="using({id: record.id, using: !record.using})"
-                )
-                  Button.btn(size="small" type="danger" ghost) {{usingText(record.using)}}
-              BasePermission(permission="del_user")
-                Popconfirm(
-                  title="一经删除，用户将无法找回。确定删除选中的用户吗？"
-                  ok-text="确认"
-                  cancel-text="取消"
-                  @confirm="del(record.id)"
-                )
-                  Button.btn(size="small" type="danger") 删除
-        AddModal(v-model="modalIsShow" @submit="getList")
-        ResetPwdModal(v-model="resetModalIsShow" :pwd="randomPwd" @close="resetPwdCb")
-        ModalAddRole(v-model="roleModalIsShow" @submit="getList" :id="userId")
-
+.wrap
+  Breadcrumb
+    BreadcrumbItem 平台配置
+    BreadcrumbItem 用户配置
+  PageHeader.pageHeader(title="用户配置" subTitle="配置平台用户信息。")
+    .tags
+      Tag(color="red") 新建用户默认无权限（无法登陆）
+      Tag(color="cyan") 用户停用后直接禁止登录
+      Tag(color="orange") 危险操作，疑问请咨询管理员
+    template(v-slot:extra)
+      BasePermission(permission="add_user")
+        Button(type="primary" @click="add")
+          template(v-slot:icon)
+            PlusOutlined
+          | 新增
+  BasePermission(permission="find_user")
+    template(v-slot:fail)
+      Result(status="403" title="403" sub-title="对不起，您没有权限查看。")
+    .user-wrap
+      Table.table(
+        size="middle"
+        :columns="columns"
+        :dataSource="tabData"
+        :loading="isLoading"
+        rowKey="username"
+        :pagination="false"
+      )
+        template(v-slot:role="{text, record}")
+          Tag(v-for="item in record.role" color="#87d068" :key="item.name") {{item.name}}
+        template(v-slot:state="{text, record}")
+          span.state(:class="{success: record.using}") {{record.using ? '启用' : '停用'}}
+        template(v-slot:action="{text, record}")
+          .btn-wrap
+            BasePermission(permission="reset_user_pwd")
+              Popconfirm(
+                :title="`重置后将生成随机密码，确定重置密码吗？`"
+                ok-text="确认"
+                cancel-text="取消"
+                @confirm="resetPwd(record.id)"
+              )
+                Button.btn(size="small") 重置密码
+            BasePermission(permission="edit_user_role")
+              Button(type="primary" size="small" @click="addRole(record.id)") 绑定角色
+            BasePermission(permission="edit_user_using")
+              Popconfirm(
+                :title="`${record.using ? '停用后账号将无法登录！' : ''}确定${usingText(record.using)}选中的用户吗？`"
+                ok-text="确认"
+                cancel-text="取消"
+                @confirm="using({id: record.id, using: !record.using})"
+              )
+                Button.btn(size="small" type="danger" ghost) {{usingText(record.using)}}
+            BasePermission(permission="del_user")
+              Popconfirm(
+                title="一经删除，用户将无法找回。确定删除选中的用户吗？"
+                ok-text="确认"
+                cancel-text="取消"
+                @confirm="del(record.id)"
+              )
+                Button.btn(size="small" type="danger") 删除
+      AddModal(v-model:isShow="modalIsShow" @submit="getList")
+      ResetPwdModal(v-model:isShow="resetModalIsShow" :pwd="randomPwd" @close="resetPwdCb")
+      ModalAddRole(v-model:isShow="roleModalIsShow" @submit="getList" :id="userId")
 </template>
 
 <script>
-import moment from "moment";
 import { emptyFormat } from "@src/js/common/helper";
 import {
   PageHeader,
@@ -80,6 +82,7 @@ import ModalAddRole from "./components/ModalAddRole.vue";
 import cryptoRandomString from "crypto-random-string";
 import BasePermission from "../components/BasePermission.vue";
 import { hasPermission } from "@src/js/common/permission.js";
+import { PlusOutlined } from '@ant-design/icons-vue';
 export default {
   components: {
     PageHeader,
@@ -93,6 +96,7 @@ export default {
     ResetPwdModal,
     ModalAddRole,
     BasePermission,
+    PlusOutlined,
     Result,
   },
   data() {
@@ -103,7 +107,7 @@ export default {
           title: "序号",
           width: 60,
           align: "center",
-          customRender: (text, record, index) => {
+          customRender: ({ text, record, index }) => {
             return index + 1;
           },
         },
@@ -111,18 +115,18 @@ export default {
         {
           title: "角色",
           align: "center",
-          scopedSlots: { customRender: "role" },
+          slots: { customRender: "role" },
         },
         {
           title: "状态",
           align: "center",
-          scopedSlots: { customRender: "state" },
+          slots: { customRender: "state" },
         },
         {
           title: "操作",
           width: 100,
           align: "center",
-          scopedSlots: { customRender: "action" },
+          slots: { customRender: "action" },
         },
       ],
       tabData: [],
@@ -137,7 +141,6 @@ export default {
     // ...mapState("order", {
     // }),
   },
-  filters: {},
   async mounted() {
     if (await hasPermission("find_user")) {
       this.getList();

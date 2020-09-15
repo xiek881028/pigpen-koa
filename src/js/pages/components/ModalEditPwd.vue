@@ -1,46 +1,42 @@
 <template lang="pug">
-  Modal(
-    title="修改密码"
-    v-model="modalIsShow"
-    :confirmLoading="modalSubmitLoading"
-    :destroyOnClose="true"
-    @ok="modalSubmit"
-    @cancel="modalClose"
-    :afterClose="modalCancel"
-    :closable="!first"
-    :maskClosable="!first"
-    :keyboard="!first"
-    :cancelButtonProps="{props: {disabled: first}}"
-  )
-    Alert.alert(show-icon type="warning" message="初次登录，为了您的账号安全，请先修改密码。否则平台页面不可用。" v-if="first")
-    FormModel.form-model(:labelCol="{span: 4, offset: 1}" :wrapperCol="{span: 14, offset: 1}" :model="confirmForm" :rules="rules" ref="modelForm")
-      FormModelItem(label="密码" :colon="false" prop="password")
-        Password(v-model="confirmForm.password" @change="inputPwd")
-      input.ghost(tabindex="-1")
-      input.ghost(type="password" tabindex="-1")
-      FormModelItem(label="确认密码" :colon="false" prop="repassword")
-        Password(v-model="confirmForm.repassword")
+Modal(
+  title="修改密码"
+  v-model:visible="isShow"
+  :confirmLoading="modalSubmitLoading"
+  :destroyOnClose="true"
+  @ok="modalSubmit"
+  @cancel="modalClose"
+  :afterClose="modalCancel"
+  :closable="!first"
+  :maskClosable="!first"
+  :keyboard="!first"
+  :cancelButtonProps="{props: {disabled: first}}"
+)
+  Alert.alert(show-icon type="warning" message="初次登录，为了您的账号安全，请先修改密码。否则平台页面不可用。" v-if="first")
+  Form.form-model(:labelCol="{span: 4, offset: 1}" :wrapperCol="{span: 14, offset: 1}" :model="confirmForm" :rules="rules" ref="modelForm")
+    FormItem(label="密码" :colon="false" name="password")
+      Password(v-model:value="confirmForm.password" @change="inputPwd")
+    input.ghost(tabindex="-1")
+    input.ghost(type="password" tabindex="-1")
+    FormItem(label="确认密码" :colon="false" name="repassword")
+      Password(v-model:value="confirmForm.repassword")
 </template>
 
 <script>
-import { Modal, FormModel, Input, Icon, Alert } from "ant-design-vue";
+import { Modal, Form, Input, Icon, Alert } from "ant-design-vue";
 const { Password } = Input;
-const { Item: FormModelItem } = FormModel;
+const { Item: FormItem } = Form;
 import { mapState } from "vuex";
 
 export default {
   components: {
     Modal,
-    FormModel,
-    FormModelItem,
+    Form,
+    FormItem,
     Input,
     Icon,
     Password,
     Alert,
-  },
-  model: {
-    prop: "isShow",
-    event: "change",
   },
   props: {
     isShow: {
@@ -53,18 +49,18 @@ export default {
     },
   },
   data() {
-    const isNumber = (rule, value, callback) => {
+    const isNumber = (rule, value) => {
       if (/^[\d]+$/.test(value)) {
-        callback(new Error("密码不能为纯数字"));
+        return Promise.reject("密码不能为纯数字");
       } else {
-        callback();
+        return Promise.resolve();
       }
     };
-    const repwd = (rule, value, callback) => {
+    const repwd = (rule, value) => {
       if (this.confirmForm.password != value) {
-        callback(new Error("两次密码不一致"));
+        return Promise.reject("两次密码不一致");
       } else {
-        callback();
+        return Promise.resolve();
       }
     };
     return {
@@ -86,14 +82,8 @@ export default {
         ],
       },
       modalSubmitLoading: false,
-      modalIsShow: !!this.isShow,
       isSubmit: false,
     };
-  },
-  watch: {
-    async isShow(val) {
-      this.modalIsShow = val;
-    },
   },
   computed: {
     // ...mapState("order", {
@@ -107,31 +97,29 @@ export default {
       }
     },
     modalSubmit() {
-      this.$refs.modelForm.validate(async (valid) => {
-        if (valid) {
-          try {
-            this.modalSubmitLoading = true;
-            const { password } = this.confirmForm;
-            await this.$store.dispatch("user/editPwd", {
-              password,
-            });
-            this.$message.success("密码修改成功，请重新登录。", 5);
-            localStorage.removeItem("token");
-            this.isSubmit = true;
-            this.modalClose();
-          } catch (error) {
-            this.$message.error(error);
-            this.modalSubmitLoading = false;
-          }
+      this.$refs.modelForm.validate().then(async () => {
+        try {
+          this.modalSubmitLoading = true;
+          const { password } = this.confirmForm;
+          await this.$store.dispatch("user/editPwd", {
+            password,
+          });
+          this.$message.success("密码修改成功，请重新登录。", 5);
+          localStorage.removeItem("token");
+          this.isSubmit = true;
+          this.modalClose();
+        } catch (error) {
+          this.$message.error(error);
+          this.modalSubmitLoading = false;
         }
       });
     },
     modalClose() {
-      this.$emit("change", false);
+      this.$emit("update:isShow", false);
+      this.$refs.modelForm.resetFields();
     },
     modalCancel() {
       this.modalSubmitLoading = false;
-      this.$refs.modelForm.resetFields();
       this.isSubmit && this.$router.push("/login");
     },
   },

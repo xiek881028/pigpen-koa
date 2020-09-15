@@ -1,31 +1,31 @@
 <template lang="pug">
-  Modal(
-    v-model="modalIsShow"
-    :destroyOnClose="true"
-    :maskClosable="false"
-    :closable="false"
-    :width="420"
-    :footer="null"
-  )
-    .title-wrap
-      Icon.icon(type="check-circle")
-      p 密码重置成功！
-    Row(type="flex" justify="space-around" align="middle" :gutter="10")
-      Col(:span="6")
-        p.label 新密码:
-      Col(:span="12")
-        Input(readOnly :defaultValue="pwd")
-      Col(:span="6")
-        Button(size="small" type="primary" ghost @click="copy") 复制
-    Row.btn-wrap(type="flex" justify="center" align="middle")
-      Col(:span="6")
-        Button(type="primary" @click="close") 知道了
+Modal(
+  v-model:visible="isShow"
+  :destroyOnClose="true"
+  :maskClosable="false"
+  :closable="false"
+  :width="420"
+  :footer="null"
+)
+  .title-wrap
+    CheckCircleOutlined.icon
+    p 密码重置成功！
+  Row(type="flex" justify="space-around" align="middle" :gutter="10")
+    Col(:span="6")
+      p.label 新密码:
+    Col(:span="12")
+      Input(readOnly :defaultValue="pwd")
+    Col(:span="6")
+      Button(size="small" type="primary" ghost @click="copy") 复制
+  Row.btn-wrap(type="flex" justify="center" align="middle")
+    Col(:span="6")
+      Button(type="primary" @click="close") 知道了
 </template>
 
 <script>
 import { Modal, Input, Icon, Button, Row, Col } from "ant-design-vue";
+import { CheckCircleOutlined } from '@ant-design/icons-vue';
 import { mapState } from "vuex";
-import cryptoRandomString from "crypto-random-string";
 
 export default {
   components: {
@@ -35,10 +35,7 @@ export default {
     Button,
     Row,
     Col,
-  },
-  model: {
-    prop: "isShow",
-    event: "change",
+    CheckCircleOutlined,
   },
   props: {
     isShow: {
@@ -49,13 +46,7 @@ export default {
   },
   data() {
     return {
-      modalIsShow: !!this.isShow,
     };
-  },
-  watch: {
-    async isShow(val) {
-      this.modalIsShow = val;
-    },
   },
   computed: {
     // ...mapState("order", {
@@ -72,8 +63,7 @@ export default {
       this.$message.success('密码已复制到剪贴板');
     },
     close() {
-      this.modalIsShow = false;
-      this.$emit("change", false);
+      this.$emit('update:isShow', false);
       this.$emit("close");
     },
   },

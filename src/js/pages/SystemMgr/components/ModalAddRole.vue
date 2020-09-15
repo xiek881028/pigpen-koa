@@ -1,45 +1,34 @@
 <template lang="pug">
-  Modal(
-    title="绑定角色"
-    v-model="modalIsShow"
-    :confirmLoading="modalSubmitLoading"
-    :destroyOnClose="true"
-    @ok="modalSubmit"
-    @cancel="modalClose"
-    :afterClose="modalCancel"
-    :width="640"
+Modal(
+  title="绑定角色"
+  v-model:visible="isShow"
+  :confirmLoading="modalSubmitLoading"
+  :destroyOnClose="true"
+  @ok="modalSubmit"
+  @cancel="modalClose"
+  :afterClose="modalCancel"
+  :width="640"
+)
+  Transfer.transfer(
+    :dataSource="dataSource"
+    :targetKeys="targetKeys"
+    :listStyle="listStyle"
+    :render="item => item.title"
+    :titles="['剩余角色', '拥有角色']"
+    @change="handleChange"
+    :showSelectAll="false"
   )
-    Transfer.transfer(
-      :dataSource="dataSource"
-      :targetKeys="targetKeys"
-      :listStyle="listStyle"
-      :render="item => item.title"
-      :titles="['剩余角色', '拥有角色']"
-      @change="handleChange"
-      :showSelectAll="false"
-    )
 </template>
 
 <script>
-import { Modal, FormModel, Input, Icon, Transfer } from "ant-design-vue";
-const { Password } = Input;
-const { Item: FormModelItem } = FormModel;
+import { Modal, Transfer } from "ant-design-vue";
 import { mapState } from "vuex";
 import { mathArr } from "@root/helper";
 
 export default {
   components: {
     Modal,
-    FormModel,
-    FormModelItem,
-    Input,
-    Icon,
-    Password,
     Transfer,
-  },
-  model: {
-    prop: "isShow",
-    event: "change",
   },
   props: {
     isShow: {
@@ -51,7 +40,6 @@ export default {
   data() {
     return {
       modalSubmitLoading: false,
-      modalIsShow: !!this.isShow,
       dataSource: [],
       targetKeys: [],
       originalTargetKeys: [],
@@ -63,7 +51,6 @@ export default {
   },
   watch: {
     async isShow(val) {
-      this.modalIsShow = val;
       const allData = [];
       const targetData = [];
       if (val && this.id) {
@@ -94,10 +81,6 @@ export default {
       }
     },
   },
-  computed: {
-    // ...mapState("order", {
-    // }),
-  },
   async mounted() {},
   methods: {
     handleChange(nextTargetKeys, direction, moveKeys) {
@@ -122,7 +105,7 @@ export default {
       }
     },
     modalClose() {
-      this.$emit("change", false);
+      this.$emit('update:isShow', false);
     },
     modalCancel() {
       this.modalSubmitLoading = false;

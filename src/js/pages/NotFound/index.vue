@@ -1,22 +1,18 @@
-/*!
-* NotFound
-* create: 2017-12-14
-* since: 0.0.1
-*/
+/*! * NotFound * create: 2017-12-14 * since: 0.0.1 */
 
 <template lang="pug">
-  div(is="LayoutBlank")
-    .indexBox
-      .infoBox
-        .title 404
-        .info 很抱歉，您访问的页面被八嘎猪吃掉惹
-        router-link(to="/") 点我返回首页
-      canvas(id="evanyou-canvas")
+component(is="LayoutBlank")
+  .indexBox
+    .infoBox
+      .title 404
+      .info 很抱歉，您访问的页面被八嘎猪吃掉惹
+      router-link(to="/") 点我返回首页
+    canvas(id="evanyou-canvas")
 </template>
 
 <script>
-import LayoutBlank from '../components/LayoutBlank.vue';
-import Evanyou from '@src/assets/evanyou.js';
+import LayoutBlank from "../components/LayoutBlank.vue";
+import Evanyou from "@src/assets/evanyou.js";
 export default {
   components: {
     LayoutBlank,
@@ -25,12 +21,12 @@ export default {
   mounted() {
     Evanyou();
   },
-}
+};
 </script>
 
 <style lang="less" scoped>
-@import '~@src/css/common.less';
-.indexBox{
+@import "~@src/css/common.less";
+.indexBox {
   position: absolute;
   top: 0;
   bottom: 0;
@@ -40,7 +36,7 @@ export default {
   justify-content: center;
   align-items: center;
   flex-direction: column;
-  canvas{
+  canvas {
     position: absolute;
     top: 0;
     bottom: 0;
@@ -50,7 +46,7 @@ export default {
     z-index: 1;
     pointer-events: none;
   }
-  .infoBox{
+  .infoBox {
     position: relative;
     z-index: 2;
     display: flex;
@@ -58,10 +54,10 @@ export default {
     align-items: center;
     flex-direction: column;
     color: #2c3e50;
-    .title{
+    .title {
       font-size: 6rem;
     }
-    .info{
+    .info {
       font-size: 1.2rem;
       padding: 1.5rem 0 2rem;
     }

@@ -1,22 +1,24 @@
 <template lang="pug">
-  .wrap
-    Breadcrumb
-      BreadcrumbItem 平台配置
-      BreadcrumbItem 权限配置
-    PageHeader.pageHeader(title="权限配置" subTitle="配置角色的权限以及权限组信息。")
-      .tags
-        Tag(color="orange") 危险操作，疑问请咨询管理员
-    BasePermission(permission="find_permission")
-      Result(slot="fail" status="403" title="403" sub-title="对不起，您没有权限查看。")
-      .permission-wrap
-        .left
-          Spin(:spinning="loadingTree")
-            .btn-group
-              Button(size="small" type="primary" @click="allOpen") 全部展开
-              Button(size="small" ghost type="primary" @click="allClose") 全部收起
-            Tree(showLine showIcon blockNode :expandedKeys="expandedKeys" @expand="onExpand" @select="selectTreeNode")
-              TreeNode(v-for="(group, groupIndex) in formatTree" :key="group.key" :selectable="!group.noSelect")
-                .tree-node(slot="title" :class="{ active: activeId == group.key }")
+.wrap
+  Breadcrumb
+    BreadcrumbItem 平台配置
+    BreadcrumbItem 权限配置
+  PageHeader.pageHeader(title="权限配置" subTitle="配置角色的权限以及权限组信息。")
+    .tags
+      Tag(color="orange") 危险操作，疑问请咨询管理员
+  BasePermission(permission="find_permission")
+    template(v-slot:fail)
+      Result(status="403" title="403" sub-title="对不起，您没有权限查看。")
+    .permission-wrap
+      .left
+        Spin(:spinning="loadingTree")
+          .btn-group
+            Button(size="small" type="primary" @click="allOpen") 全部展开
+            Button(size="small" ghost type="primary" @click="allClose") 全部收起
+          Tree(showLine showIcon blockNode :expandedKeys="expandedKeys" @expand="onExpand" @select="selectTreeNode")
+            TreeNode(v-for="(group, groupIndex) in formatTree" :key="group.key" :selectable="!group.noSelect")
+              template(v-slot:title)
+                .tree-node(:class="{ active: activeId == group.key }")
                   template(v-if="group.key === '_IS_WARNING_TO_ADD_PERMISSION_GROUP'")
                     Button.add(size="small" type="link") {{group.title}}
                   template(v-else-if="group.key === '_WARNING_GROUP_IS_EMPTY'")
@@ -25,36 +27,37 @@
                     .name {{group.title}}
                     .ops
                       BasePermission(permission="edit_permission")
-                        Icon.edit(type="edit" @click.stop="edit")
+                        EditOutlined.edit(@click.stop="edit")
                       BasePermission(permission="del_permission")
-                        Icon.del(type="delete" @click.stop="del(group.title, true)")
-                TreeNode(v-for="item in group.children" :key="item.key" :selectable="!item.noSelect")
-                  .tree-node(slot="title" :class="{ active: activeId == item.key }")
+                        DeleteOutlined.del(@click.stop="del(group.title, true)")
+              TreeNode(v-for="item in group.children" :key="item.key" :selectable="!item.noSelect")
+                template(v-slot:title)
+                  .tree-node(:class="{ active: activeId == item.key }")
                     template(v-if="item.key === `_IS_WARNING_TO_ADD_PERMISSION_${groupIndex}`")
                       Button.add(size="small" type="link") {{item.title}}
                     template(v-else)
                       .name {{item.title}}
                       .ops
                         BasePermission(permission="edit_permission")
-                          Icon.edit(type="edit" @click.stop="edit")
+                          EditOutlined.edit(@click.stop="edit")
                         BasePermission(permission="del_permission")
-                          Icon.del(type="delete" @click.stop="del(item.title)")
-        .right
-          FormModel.form-wrap(v-show="isGroup === true" :labelCol="{span: 4, offset: 2}" :wrapperCol="{span: 16}" :model="groupForm" :rules="groupRules" ref="groupFormEl" @submit.prevent="submitGroup")
-            FormModelItem(label="权限组名称" :colon="false" prop="name")
-              Input(v-model="groupForm.name" :disabled="!canEdit")
-            FormModelItem(:wrapperCol="{ span: 18, offset: 6 }")
-              Button.submit-btn(type="primary" :disabled="!canEdit" htmlType="submit" :loading="isLoading") 提交
-          FormModel.form-wrap(v-show="isGroup === false" :labelCol="{span: 4, offset: 2}" :wrapperCol="{span: 16}" :model="permissionForm" :rules="permissionRules" ref="permissionFormEl" @submit.prevent="submitPermission")
-            FormModelItem(label="权限名称" :colon="false" prop="name")
-              Input(v-model="permissionForm.name" :disabled="!canEdit")
-            FormModelItem(label="权限code" :colon="false" prop="code")
-              Input(v-model="permissionForm.code" :disabled="!canEdit")
-            FormModelItem(label="所属权限组" :colon="false" prop="groupid")
-              Select(v-model="permissionForm.groupid" :disabled="!canEdit")
-                Option(v-for="item in permissionGroupList" :key="item.id") {{item.name}}
-            FormModelItem(:wrapperCol="{ span: 18, offset: 6 }")
-              Button.submit-btn(type="primary" :disabled="!canEdit" htmlType="submit" :loading="isLoading") 提交
+                          DeleteOutlined.del(@click.stop="del(item.title)")
+      .right
+        Form.form-wrap(v-show="isGroup === true" :labelCol="{span: 4, offset: 2}" :wrapperCol="{span: 16}" :model="groupForm" :rules="groupRules" ref="groupFormEl" @finish="submitGroup")
+          FormItem(label="权限组名称" :colon="false" name="name")
+            Input(v-model:value="groupForm.name" :disabled="!canEdit")
+          FormItem(:wrapperCol="{ span: 18, offset: 6 }")
+            Button.submit-btn(type="primary" :disabled="!canEdit" htmlType="submit" :loading="isLoading") 提交
+        Form.form-wrap(v-show="isGroup === false" :labelCol="{span: 4, offset: 2}" :wrapperCol="{span: 16}" :model="permissionForm" :rules="permissionRules" ref="permissionFormEl" @finish="submitPermission")
+          FormItem(label="权限名称" :colon="false" name="name")
+            Input(v-model:value="permissionForm.name" :disabled="!canEdit")
+          FormItem(label="权限code" :colon="false" name="code")
+            Input(v-model:value="permissionForm.code" :disabled="!canEdit")
+          FormItem(label="所属权限组" :colon="false" name="groupid")
+            Select(v-model:value="permissionForm.groupid" :disabled="!canEdit")
+              Option(v-for="item in permissionGroupList" :key="item.id") {{item.name}}
+          FormItem(:wrapperCol="{ span: 18, offset: 6 }")
+            Button.submit-btn(type="primary" :disabled="!canEdit" htmlType="submit" :loading="isLoading") 提交
 </template>
 
 <script>
@@ -66,8 +69,7 @@ import {
   Button,
   Tag,
   Tree,
-  Icon,
-  FormModel,
+  Form,
   Input,
   Select,
   Popconfirm,
@@ -78,11 +80,13 @@ import {
 const { Item: BreadcrumbItem } = Breadcrumb;
 const { TreeNode } = Tree;
 const { Option } = Select;
-const { Item: FormModelItem } = FormModel;
+const { Item: FormItem } = Form;
 const { confirm } = Modal;
 import { mapState } from "vuex";
+import { createVNode } from "vue";
 import BasePermission from "../components/BasePermission.vue";
 import { hasPermissionSync, hasPermission } from "@src/js/common/permission.js";
+import { EditOutlined, DeleteOutlined } from "@ant-design/icons-vue";
 export default {
   components: {
     PageHeader,
@@ -92,9 +96,8 @@ export default {
     Tag,
     Tree,
     TreeNode,
-    Icon,
-    FormModel,
-    FormModelItem,
+    Form,
+    FormItem,
     Input,
     Select,
     Option,
@@ -102,6 +105,8 @@ export default {
     Spin,
     Result,
     BasePermission,
+    EditOutlined,
+    DeleteOutlined,
   },
   data() {
     return {
@@ -230,7 +235,6 @@ export default {
       return out;
     },
   },
-  filters: {},
   async mounted() {
     if (await hasPermission("find_permission")) {
       await this.getPermissionList();
@@ -241,7 +245,7 @@ export default {
     // 树全部展开
     allOpen() {
       let expandedKeys = [];
-      this.permissionGroupList.map(item => expandedKeys.push(item.id));
+      this.permissionGroupList.map((item) => expandedKeys.push(item.id));
       this.expandedKeys = expandedKeys;
     },
     // 树全部收起
@@ -249,81 +253,73 @@ export default {
       this.expandedKeys = [];
     },
     // 提交修改权限
-    submitPermission() {
-      this.$refs.permissionFormEl.validate(async (valid) => {
-        if (valid) {
-          const { name, code, groupid } = this.permissionForm;
-          const isAdd = /^(_IS_WARNING_TO_ADD_PERMISSION_){1}[\d]+$/.test(
-            this.activeId
-          );
-          const { groupid: _groupid } = this.searchData[this.activeId];
-          try {
-            this.canEdit = false;
-            this.isLoading = true;
-            const data = {
-              name,
-              code,
-              groupid: groupid
-                ? groupid
-                : _groupid === "_WARNING_GROUP_IS_EMPTY"
-                ? undefined
-                : _groupid,
-            };
-            if (!isAdd) data.id = this.activeId;
-            const res = await this.$store.dispatch(
-              isAdd ? "systemUser/addPermission" : "systemUser/editPermission",
-              data
-            );
-            this.$message.success(`权限${isAdd ? "新增" : "编辑"}成功`);
-            this.getPermissionList();
-            // activeId影响左侧菜单高亮样式，不要随便删除
-            // this.activeId = "";
-            if (isAdd) {
-              // 新增清空表单
-              this.reset();
-              this.canEdit = true;
-              this.$set(this.permissionForm, "groupid", groupid);
-            }
-          } catch (error) {
-            this.canEdit = true;
-            this.$message.error(error);
-          }
-          this.isLoading = false;
+    async submitPermission() {
+      const { name, code, groupid } = this.permissionForm;
+      const isAdd = /^(_IS_WARNING_TO_ADD_PERMISSION_){1}[\d]+$/.test(
+        this.activeId
+      );
+      const { groupid: _groupid } = this.searchData[this.activeId];
+      try {
+        this.canEdit = false;
+        this.isLoading = true;
+        const data = {
+          name,
+          code,
+          groupid: groupid
+            ? groupid
+            : _groupid === "_WARNING_GROUP_IS_EMPTY"
+            ? undefined
+            : _groupid,
+        };
+        if (!isAdd) data.id = this.activeId;
+        const res = await this.$store.dispatch(
+          isAdd ? "systemUser/addPermission" : "systemUser/editPermission",
+          data
+        );
+        this.$message.success(`权限${isAdd ? "新增" : "编辑"}成功`);
+        this.getPermissionList();
+        // activeId影响左侧菜单高亮样式，不要随便删除
+        // this.activeId = "";
+        if (isAdd) {
+          // 新增清空表单
+          this.reset();
+          this.canEdit = true;
+          this.permissionForm.groupid = groupid;
         }
-      });
+      } catch (error) {
+        this.canEdit = true;
+        this.$message.error(error);
+      }
+      this.isLoading = false;
     },
     // 提交修改权限组
-    submitGroup() {
-      this.$refs.groupFormEl.validate(async (valid) => {
-        if (valid) {
-          const isAdd = this.activeId === "_IS_WARNING_TO_ADD_PERMISSION_GROUP";
-          const { name } = this.groupForm;
-          try {
-            this.canEdit = false;
-            this.isLoading = true;
-            const data = { name };
-            if (!isAdd) data.id = this.activeId;
-            const res = await this.$store.dispatch(
-              isAdd ? "systemUser/addGroup" : "systemUser/editGroup",
-              data
-            );
-            this.$message.success(`权限组${isAdd ? "新增" : "编辑"}成功`);
-            this.getPermissionList();
-            if (isAdd) {
-              this.reset();
-              this.canEdit = true;
-            }
-            // 修改权限组后，更新权限select框需要获取新的权限组
-            this.getPermissionGroupList();
-            // activeId影响左侧菜单高亮样式，不要随便删除
-            // this.activeId = "";
-          } catch (error) {
-            this.canEdit = true;
-            this.$message.error(error);
-          }
-          this.isLoading = false;
+    async submitGroup() {
+      const isAdd = this.activeId === "_IS_WARNING_TO_ADD_PERMISSION_GROUP";
+      const { name } = this.groupForm;
+      try {
+        this.canEdit = false;
+        this.isLoading = true;
+        const data = { name };
+        if (!isAdd) data.id = this.activeId;
+        const res = await this.$store.dispatch(
+          isAdd ? "systemUser/addGroup" : "systemUser/editGroup",
+          data
+        );
+        this.$message.success(`权限组${isAdd ? "新增" : "编辑"}成功`);
+        this.getPermissionList();
+        if (isAdd) {
+          this.reset();
+          this.canEdit = true;
         }
-      });
+        // 修改权限组后，更新权限select框需要获取新的权限组
+        this.getPermissionGroupList();
+        // activeId影响左侧菜单高亮样式，不要随便删除
+        // this.activeId = "";
+      } catch (error) {
+        this.canEdit = true;
+        this.$message.error(error);
+      }
+      this.isLoading = false;
     },
     add(isGroup) {
       this.isGroup = isGroup;
@@ -336,19 +332,18 @@ export default {
     del(title, isGroup = false) {
       confirm({
         title: `确定删除权限${isGroup ? "组" : ""} ${title} 吗？`,
-        content: (h) =>
-          h("div", [
-            h("span", { style: { color: "#ff4d4f" } }, title),
-            ` 一旦被删除将无法恢复，`,
-            isGroup
-              ? h(
-                  "span",
-                  { style: { color: "#ff4d4f" } },
-                  "组下权限全部转移至未分类组，"
-                )
-              : "",
-            `请谨慎操作！`,
-          ]),
+        content: createVNode("div", {}, [
+          createVNode("span", { style: { color: "#ff4d4f" } }, title),
+          ` 一旦被删除将无法恢复，`,
+          isGroup
+            ? createVNode(
+                "span",
+                { style: { color: "#ff4d4f" } },
+                "组下权限全部转移至未分类组，"
+              )
+            : "",
+          `请谨慎操作！`,
+        ]),
         okText: "确定",
         okType: "danger",
         cancelText: "取消",
@@ -391,11 +386,8 @@ export default {
           this.add(true);
         } else if (/^(_IS_WARNING_TO_ADD_PERMISSION_){1}[\d]+$/.test(_params)) {
           this.add(false);
-          this.$set(
-            this.permissionForm,
-            "groupid",
-            groupid === "_WARNING_GROUP_IS_EMPTY" ? undefined : groupid
-          );
+          this.permissionForm.groupid =
+            groupid === "_WARNING_GROUP_IS_EMPTY" ? undefined : groupid;
         } else {
           this.isGroup = isGroup;
           if (isGroup) {
@@ -462,7 +454,7 @@ export default {
       border-right: 1px solid #e8e8e8;
       max-height: 70vh;
       overflow-y: auto;
-      .btn-group{
+      .btn-group {
         display: flex;
         align-items: center;
         justify-content: space-evenly;

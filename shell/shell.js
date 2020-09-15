@@ -21,8 +21,8 @@ const argv = require('yargs').argv;
 	assets: 资源列表,可以为字符串或数组,内容可为文件或文件夹 required
 */
 const assets = {
-  vue: { assets: { js: ['dist/vue.min.js', 'dist/vue.js'] } },
-  'vue-router': { assets: { js: ['dist/vue-router.min.js', 'dist/vue-router.js'] } },
+  vue: { assets: { js: ['dist/vue.global.prod.js'] } },
+  'vue-router': { assets: { js: ['dist/vue-router.global.prod.js'] } },
   axios: { assets: { js: ['dist/axios.min.js', 'dist/axios.js'] } },
   tinymce: { path: path.join(__dirname, '../src/assets'), assets: { '.': './' } },
 };

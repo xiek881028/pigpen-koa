@@ -1,4 +1,5 @@
 <template lang="pug">
+Spin(:spinning="webSpin")
   Layout.wrap
     Sider.sider(collapsible collapsedWidth="0")
       .scroll-wrap
@@ -7,28 +8,31 @@
           template(v-for="item in roleMenuList")
             MenuItem(:key='item.key' v-if="item.url")
               router-link(:to="item.url")
-                Icon(:type='item.icon')
+                component(:is='item.icon')
                 span {{item.name}}
             SubMenu(v-else :key="item.key")
-              span(slot="title")
-                Icon(:type='item.icon')
-                | {{item.name}}
+              template(v-slot:title)
+                span
+                  component(:is='item.icon')
+                  | {{item.name}}
               MenuItem(v-for="child in item.children" :key='`${item.key}-${child.key}`')
                 router-link(:to="child.url") {{child.name}}
-    Layout.content-wrap(id='admin-layout-body')
+    Layout.content-wrap
       Header.header
         .avatar-wrap
-          Avatar.avatar(icon='user')
+          Avatar.avatar
+            template(v-slot:icon)
+              UserOutlined
           | {{userinfo.username}}
         Dropdown.dropdown-wrap(:trigger="['click']")
           span 个人设置
-          Menu(slot="overlay" @click="clickOps")
-            MenuItem(key="changePwd") 修改密码
-            MenuItem(key="logout") 登出
-      //- Spin(:spinning="spinning")
-      //-   Content.router-wrap(is="BaseTransitionBox" enterClass="zoomIn fast" leaveClass="zoomOut fast" ref="router")
-      Content.router-wrap(is="BaseTransitionBox" enterClass="zoomIn fast" leaveClass="zoomOut fast" ref="router")
-    ModalEditPwd(v-model="modalIsShow" :first="first")
+          template(v-slot:overlay)
+            Menu(@click="clickOps")
+              MenuItem(key="changePwd") 修改密码
+              MenuItem(key="logout") 登出
+      Spin(:spinning="contentSpin")
+        Content.router-wrap(v-is="'BaseTransitionBox'" enterClass="zoomIn fast" leaveClass="zoomOut fast" ref="router")
+    ModalEditPwd(v-model:isShow="modalIsShow" :first="first")
         //- router-view
 </template>
 
@@ -39,11 +43,10 @@ import { hasPermissionSync } from "@src/js/common/permission.js";
 import BaseTransitionBox from "./BaseTransitionBox.vue";
 import ModalEditPwd from "./ModalEditPwd.vue";
 import { menu } from "../router";
-import NProgress from "nprogress";
-import { Layout, Menu, Icon, Avatar, Dropdown, Spin } from "ant-design-vue";
+import { Layout, Menu, Avatar, Dropdown, Spin } from "ant-design-vue";
 const { Sider, Header, Content } = Layout;
 const { Item: MenuItem, SubMenu } = Menu;
-NProgress.configure({ parent: "#admin-layout-body" });
+import { UserOutlined } from '@ant-design/icons-vue';
 
 export default {
   components: {
@@ -55,10 +58,10 @@ export default {
     Menu,
     MenuItem,
     SubMenu,
-    Icon,
     Avatar,
     Dropdown,
     Spin,
+    UserOutlined,
     ModalEditPwd,
   },
   data() {
@@ -73,8 +76,10 @@ export default {
     };
   },
   computed: {
-    ...mapState("user", {
-      userinfo: (state) => state.userinfo,
+    ...mapState({
+      userinfo: state => state.user.userinfo,
+      webSpin: state => state.fcg.webSpin,
+      contentSpin: state => state.fcg.contentSpin,
     }),
     // 侧边栏菜单权限展示逻辑
     roleMenuList() {
@@ -115,30 +120,6 @@ export default {
     $route: "findActiveRouter",
   },
   mounted() {
-    // 后台展示区域路由监控
-    this.$refs.router.$router.beforeEach((to, from, next) => {
-      // this.spinning = true;
-      // NProgress.start();
-      if (
-        to.meta.permission != "notLogin" &&
-        from.meta.permission != "notLogin"
-      ) {
-        NProgress.start();
-      }
-      next();
-    });
-    // 资源加载完成后触发
-    this.$refs.router.$router.beforeResolve((to, from, next) => {
-      // this.spinning = false;
-      // NProgress.done();
-      if (
-        to.meta.permission != "notLogin" &&
-        from.meta.permission != "notLogin"
-      ) {
-        NProgress.done();
-      }
-      next();
-    });
   },
   methods: {
     clickOps(item) {
@@ -193,8 +174,10 @@ export default {
     // 登出
     async logout() {
       try {
+        this.$store.dispatch('fcg/setWebSpin', true);
         await this.$store.dispatch("user/logout");
         this.$router.push("/login");
+        this.$store.dispatch('fcg/setWebSpin', false);
       } catch (error) {
         this.$message.error(error);
       }

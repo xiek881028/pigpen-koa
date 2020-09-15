@@ -1,62 +1,72 @@
 <template lang="pug">
-  .wrap
-    Breadcrumb
-      BreadcrumbItem 平台配置
-      BreadcrumbItem 角色配置
-    PageHeader.pageHeader(title="角色配置" subTitle="配置用户的角色信息。")
-      .tags
-        Tag(color="orange") 危险操作，疑问请咨询管理员
-    BasePermission(permission="find_role")
-      Result(slot="fail" status="403" title="403" sub-title="对不起，您没有权限查看。")
-      .content-wrap
-        .left(@click="clearActive")
-          Spin(:spinning="loadingRole")
-            .list
-              .item(v-for="item in roleList" :class="{ active: activeId == item.id }" @click.stop="activeItem(item)")
-                .name {{item.name}}
-                .ops
-                  BasePermission(permission="edit_role")
-                    Icon.edit(type="edit" @click.stop="editRole(item)")
-                  BasePermission(permission="del_role")
-                    Popconfirm(
-                      :title="`删除后用户将失去角色，确定要删除角色 ${item.name} 吗？`"
-                      ok-text="确认"
-                      cancel-text="取消"
-                      @confirm="del(item)"
-                    )
-                      Icon.del(type="delete")
-          .btn-wrap
-            BasePermission(permission="add_role")
-              Button(size="small" @click.stop="add" icon="plus-circle" type="primary") 新增
-            Button(size="small" @click.stop="getRoleList" icon="redo") 更新数据
-        .right
-          FormModel.form-wrap(:labelCol="{span: 4}" :wrapperCol="{span: 18}" :model="confirmForm" :rules="rules" ref="modelForm" @submit.prevent="submit")
-            FormModelItem(label="角色名称" :colon="false" prop="name")
-              Input(v-model="confirmForm.name" :disabled="!canEdit")
-            FormModelItem(label="权限" :colon="false")
-              Row(v-for="item in permissionList" :key="item.group")
-                Col.label(:span="8") {{item.groupName || '未分类'}}
-                Col(:span="16")
-                  Checkbox.all(@change="checkAll($event, item)" :indeterminate="hasAnyList[item.group]" :checked="checkAllList[item.group]" :disabled="!canEdit") 全部
-                  CheckBoxGroup(:options="formatCheckbox(item.children)" v-model="checkedList[item.group]" @change="changePermission($event, item)" :disabled="!canEdit")
-            Row
-              Col(:offset="4")
-                BasePermission(:permission="['add_role', 'edit_role']")
-                  Button.submit-btn(type="primary" v-if="canEdit" htmlType="submit" :disabled="isSubmit" :loading="isSubmit") 提交
-
+.wrap
+  Breadcrumb
+    BreadcrumbItem 平台配置
+    BreadcrumbItem 角色配置
+  PageHeader.pageHeader(title="角色配置" subTitle="配置用户的角色信息。")
+    .tags
+      Tag(color="orange") 危险操作，疑问请咨询管理员
+  BasePermission(permission="find_role")
+    template(v-slot:fail)
+      Result(status="403" title="403" sub-title="对不起，您没有权限查看。")
+    .content-wrap
+      .left(@click="clearActive")
+        Spin(:spinning="loadingRole")
+          .list
+            .item(v-for="item in roleList" :class="{ active: activeId == item.id }" @click.stop="activeItem(item)")
+              .name {{item.name}}
+              .ops
+                BasePermission(permission="edit_role")
+                  EditOutlined.edit(@click.stop="editRole(item)")
+                BasePermission(permission="del_role")
+                  Popconfirm(
+                    :title="`删除后用户将失去角色，确定要删除角色 ${item.name} 吗？`"
+                    ok-text="确认"
+                    cancel-text="取消"
+                    @confirm="del(item)"
+                  )
+                    DeleteOutlined.del
+        .btn-wrap
+          BasePermission(permission="add_role")
+            Button(size="small" @click.stop="add" type="primary")
+              template(v-slot:icon)
+                PlusCircleOutlined
+              | 新增
+          Button(size="small" @click.stop="getRoleList")
+            template(v-slot:icon)
+              RedoOutlined
+            | 更新数据
+      .right
+        Form.form-wrap(:labelCol="{span: 4}" :wrapperCol="{span: 18}" :model="confirmForm" :rules="rules" ref="modelForm" @finish="finish")
+          FormItem(label="角色名称" :colon="false" name="name")
+            Input(v-model:value="confirmForm.name" :disabled="!canEdit")
+          FormItem(label="权限" :colon="false")
+            Row(v-for="item in permissionList" :key="item.group")
+              Col.label(:span="8") {{item.groupName || '未分类'}}
+              Col(:span="16")
+                Checkbox.all(@change="checkAll($event, item)" :indeterminate="hasAnyList[item.group]" :checked="checkAllList[item.group]" :disabled="!canEdit") 全部
+                CheckBoxGroup(:options="formatCheckbox(item.children)" v-model:value="checkedList[item.group]" @change="changePermission($event, item)" :disabled="!canEdit")
+          Row
+            Col(:offset="4")
+              BasePermission(:permission="['add_role', 'edit_role']")
+                Button.submit-btn(type="primary" v-if="canEdit" htmlType="submit" :disabled="isSubmit" :loading="isSubmit") 提交
 </template>
 
 <script>
-import moment from "moment";
 import { emptyFormat, obj2url } from "@src/js/common/helper";
 import BasePermission from "../components/BasePermission.vue";
+import {
+  EditOutlined,
+  DeleteOutlined,
+  PlusCircleOutlined,
+  RedoOutlined,
+} from "@ant-design/icons-vue";
 import {
   PageHeader,
   Breadcrumb,
   Button,
   Tag,
-  Icon,
-  FormModel,
+  Form,
   Input,
   Row,
   Col,
@@ -66,7 +76,7 @@ import {
   Popconfirm,
 } from "ant-design-vue";
 const { Item: BreadcrumbItem } = Breadcrumb;
-const { Item: FormModelItem } = FormModel;
+const { Item: FormItem } = Form;
 const { Group: CheckBoxGroup } = Checkbox;
 import { mapState } from "vuex";
 import { hasPermissionSync, hasPermission } from "@src/js/common/permission.js";
@@ -77,9 +87,8 @@ export default {
     BreadcrumbItem,
     Button,
     Tag,
-    Icon,
-    FormModel,
-    FormModelItem,
+    Form,
+    FormItem,
     Input,
     Row,
     Col,
@@ -89,6 +98,10 @@ export default {
     Popconfirm,
     Result,
     BasePermission,
+    EditOutlined,
+    DeleteOutlined,
+    PlusCircleOutlined,
+    RedoOutlined,
   },
   data() {
     return {
@@ -118,7 +131,6 @@ export default {
     // ...mapState("order", {
     // }),
   },
-  filters: {},
   async mounted() {
     if (await hasPermission("find_role")) {
       this.getRoleList();
@@ -161,71 +173,59 @@ export default {
       this.hasAnyList = {};
       this.checkedList = {};
     },
-    submit() {
-      this.$refs.modelForm.validate(async (valid) => {
-        if (valid) {
-          this.isSubmit = true;
-          let permissionArr = [];
-          for (const item in this.checkedList) {
-            permissionArr = permissionArr.concat(this.checkedList[item]);
-          }
-          if (this.mode == "edit") {
-            try {
-              const res = await this.$store.dispatch(
-                "systemUser/editRolePermission",
-                {
-                  id: this.activeId,
-                  name: this.confirmForm.name,
-                  permission: permissionArr,
-                }
-              );
-              this.$message.success("角色权限修改成功");
-              this.$set(this.saveData, this.activeId, this.checkedList);
-              this.canEdit = false;
-            } catch (error) {
-              this.$message.error(error);
+    async finish() {
+      this.isSubmit = true;
+      let permissionArr = [];
+      for (const item in this.checkedList) {
+        permissionArr = permissionArr.concat(this.checkedList[item]);
+      }
+      if (this.mode == "edit") {
+        try {
+          const res = await this.$store.dispatch(
+            "systemUser/editRolePermission",
+            {
+              id: this.activeId,
+              name: this.confirmForm.name,
+              permission: permissionArr,
             }
-          } else {
-            try {
-              const res = await this.$store.dispatch("systemUser/addRole", {
-                name: this.confirmForm.name,
-                permission: permissionArr,
-              });
-              this.$message.success("创建角色成功");
-              this.$set(this.saveData, res.id, this.checkedList);
-              this.reset();
-            } catch (error) {
-              this.$message.error(error);
-            }
-          }
-          this.getRoleList();
-          this.isSubmit = false;
+          );
+          this.$message.success("角色权限修改成功");
+          this.saveData[this.activeId] = this.checkedList;
+          this.canEdit = false;
+        } catch (error) {
+          this.$message.error(error);
         }
-      });
+      } else {
+        try {
+          const res = await this.$store.dispatch("systemUser/addRole", {
+            name: this.confirmForm.name,
+            permission: permissionArr,
+          });
+          this.$message.success("创建角色成功");
+          this.saveData[res.id] = this.checkedList;
+          this.reset();
+        } catch (error) {
+          this.$message.error(error);
+        }
+      }
+      this.getRoleList();
+      this.isSubmit = false;
     },
     // 点击全选事件
     checkAll(e, item) {
       const isCheck = e.target.checked;
-      this.$set(
-        this.checkedList,
-        item.group,
-        isCheck ? this.formatCheckbox(item.children, true) : []
-      );
-      this.$set(this.checkAllList, item.group, isCheck);
-      this.$set(this.hasAnyList, item.group, false);
+      this.checkedList[item.group] = isCheck
+        ? this.formatCheckbox(item.children, true)
+        : [];
+      this.checkAllList[item.group] = isCheck;
+      this.hasAnyList[item.group] = false;
     },
     // 点击权限checkbox
     changePermission(activeList, item) {
-      this.$set(
-        this.hasAnyList,
-        item.group,
-        !!activeList.length && activeList.length < item.children.length
-      );
-      this.$set(
-        this.checkAllList,
-        item.group,
-        activeList.length === item.children.length
-      );
+      this.hasAnyList[item.group] =
+        !!activeList.length && activeList.length < item.children.length;
+      this.checkAllList[item.group] =
+        activeList.length === item.children.length;
     },
     // 格式化数据满足ant的checkboxGroup格式
     formatCheckbox(data, onlyValue = false) {
@@ -301,7 +301,7 @@ export default {
             });
           }
         });
-        this.$set(this.saveData, id, list);
+        this.saveData[id] = list;
       }
       this.setDetails({
         name,
@@ -311,7 +311,7 @@ export default {
     // 设置详情数据
     setDetails(data) {
       const { name, list } = data;
-      this.$set(this.confirmForm, "name", name);
+      this.confirmForm.name = name;
       this.checkedList = list;
       this.checkAllState();
     },
@@ -319,16 +319,10 @@ export default {
     checkAllState() {
       this.permissionList.map((item) => {
         const activeList = this.checkedList[item.group] || [];
-        this.$set(
-          this.hasAnyList,
-          item.group,
-          !!activeList.length && activeList.length < item.children.length
-        );
-        this.$set(
-          this.checkAllList,
-          item.group,
-          activeList.length === item.children.length
-        );
+        this.hasAnyList[item.group] =
+          !!activeList.length && activeList.length < item.children.length;
+        this.checkAllList[item.group] =
+          activeList.length === item.children.length;
       });
     },
   },
@@ -351,6 +345,7 @@ export default {
       border-radius: 5px;
       justify-content: space-between;
       .list {
+        min-height: 50px;
         width: 300px;
         max-height: 1000px;
         overflow-y: auto;
@@ -414,7 +409,7 @@ export default {
           margin-right: 8px;
         }
       }
-      .submit-btn{
+      .submit-btn {
         display: block;
         margin: 0 auto;
       }

@@ -1,7 +1,6 @@
 <template lang="pug">
-  transition
-    slot(v-if="pShow")
-    slot(name="fail" v-else-if="pShow === false")
+slot(v-if="pShow")
+slot(name="fail" v-else-if="pShow === false")
 </template>
 
 <script>

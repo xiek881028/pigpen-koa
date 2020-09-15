@@ -1,7 +1,7 @@
-/*! * BaseTransitionBox * create: 2017-12-06 * since: 0.0.1 */
-
 <template lang="pug">
-	div
+//- 外层如果有is，需要一个实体dom节点接受is上的class，故div不能省
+div#nprogressWrap
+	ConfigProvider(:locale="zh_CN")
 		transition(
 			appear
 			:enter-active-class="`animated ${enterClass}`"
@@ -11,35 +11,44 @@
 			mode="out-in"
 		)
 			//- router-view(:pageSwitched='pageSwitched')
-			ConfigProvider(:locale="zh_CN")
-				router-view
+			router-view
 </template>
 
 <script>
 // 国际化
 import { ConfigProvider } from "ant-design-vue";
-import zh_CN from 'ant-design-vue/lib/locale-provider/zh_CN';
+import zh_CN from "ant-design-vue/lib/locale-provider/zh_CN";
+import NProgress from "nprogress";
+NProgress.configure({ parent: "#nprogressWrap" });
+
 export default {
   data: () => {
     return {
-			// pageSwitched: false
-			zh_CN,
+      // pageSwitched: false
+      zh_CN,
     };
-	},
-	components: {
-		ConfigProvider,
-	},
+  },
+  components: {
+    ConfigProvider,
+  },
   props: {
     enterClass: String,
-    leaveClass: String
+    leaveClass: String,
   },
-  mounted() {},
+  mounted() {
+    this.$router.beforeEach((to, from, next) => {
+      NProgress.start();
+      next();
+    });
+    this.$router.beforeResolve((to, from, next) => {
+      NProgress.done();
+      next();
+    });
+  },
   methods: {
-    afterEnter: function() {
-    },
-    beforeLeave: function() {
-    }
-  }
+    afterEnter: function () {},
+    beforeLeave: function () {},
+  },
 };
 </script>
 

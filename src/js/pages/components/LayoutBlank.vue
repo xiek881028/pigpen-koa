@@ -5,8 +5,8 @@
 */
 
 <template lang="pug">
-  .RootBox
-    slot
+.RootBox
+  slot
 </template>
 
 <script>

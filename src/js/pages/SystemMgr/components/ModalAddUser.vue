@@ -1,41 +1,36 @@
 <template lang="pug">
-  Modal(
-    title="添加账号"
-    v-model="modalIsShow"
-    :confirmLoading="modalSubmitLoading"
-    :destroyOnClose="true"
-    @ok="modalSubmit"
-    @cancel="modalClose"
-    :afterClose="modalCancel"
-    :width="640"
-  )
-    FormModel.form-model(:labelCol="{span: 4, offset: 1}" :wrapperCol="{span: 14, offset: 1}" :model="confirmForm" :rules="rules" ref="modelForm")
-      FormModelItem(label="账号" :colon="false" prop="username")
-        Input(v-model="confirmForm.username")
-      input.ghost(tabindex="-1")
-      input.ghost(type="password" tabindex="-1")
-      FormModelItem(label="密码" :colon="false" prop="password")
-        Password(v-model="confirmForm.password")
+Modal(
+  title="添加账号"
+  v-model:visible="isShow"
+  :confirmLoading="modalSubmitLoading"
+  :destroyOnClose="true"
+  @ok="modalSubmit"
+  @cancel="modalClose"
+  :afterClose="modalCancel"
+  :width="640"
+)
+  Form.form-model(:labelCol="{span: 4, offset: 1}" :wrapperCol="{span: 14, offset: 1}" :model="confirmForm" :rules="rules" ref="modelForm")
+    input.ghost(tabindex="-1" name="username")
+    FormItem(label="账号" :colon="false" name="username")
+      Input(v-model:value="confirmForm.username")
+    input.ghost(type="password" tabindex="-1" name="password")
+    FormItem(label="密码" :colon="false" name="password")
+      Password(v-model:value="confirmForm.password")
 </template>
 
 <script>
-import { Modal, FormModel, Input, Icon } from "ant-design-vue";
+import { Modal, Form, Input } from "ant-design-vue";
 const { Password } = Input;
-const { Item: FormModelItem } = FormModel;
+const { Item: FormItem } = Form;
 import { mapState } from "vuex";
 
 export default {
   components: {
     Modal,
-    FormModel,
-    FormModelItem,
+    Form,
+    FormItem,
     Input,
-    Icon,
     Password,
-  },
-  model: {
-    prop: "isShow",
-    event: "change",
   },
   props: {
     isShow: {
@@ -44,11 +39,11 @@ export default {
     },
   },
   data() {
-    const isNumber = (rule, value, callback) => {
+    const isNumber = (rule, value) => {
       if (/^[\d]+$/.test(value)) {
-        callback(new Error("密码不能为纯数字"));
+        return Promise.reject("密码不能为纯数字");
       } else {
-        callback();
+        return Promise.resolve();
       }
     };
     return {
@@ -68,13 +63,7 @@ export default {
         ],
       },
       modalSubmitLoading: false,
-      modalIsShow: !!this.isShow,
     };
-  },
-  watch: {
-    async isShow(val) {
-      this.modalIsShow = val;
-    },
   },
   computed: {
     // ...mapState("order", {
@@ -82,31 +71,29 @@ export default {
   },
   methods: {
     modalSubmit() {
-      this.$refs.modelForm.validate(async (valid) => {
-        if (valid) {
-          try {
-            this.modalSubmitLoading = true;
-            const { username, password } = this.confirmForm;
-            await this.$store.dispatch("systemUser/add", {
-              username,
-              password,
-            });
-            this.$message.success("新增账号成功");
-            this.$emit("submit");
-            this.modalClose();
-          } catch (error) {
-            this.$message.error(error);
-            this.modalSubmitLoading = false;
-          }
+      this.$refs.modelForm.validate().then(async () => {
+        try {
+          this.modalSubmitLoading = true;
+          const { username, password } = this.confirmForm;
+          await this.$store.dispatch("systemUser/add", {
+            username,
+            password,
+          });
+          this.$message.success("新增账号成功");
+          this.$emit("submit");
+          this.modalClose();
+        } catch (error) {
+          this.$message.error(error);
+          this.modalSubmitLoading = false;
         }
       });
     },
     modalClose() {
-      this.$emit("change", false);
+      this.$emit("update:isShow", false);
+      this.$refs.modelForm.resetFields();
     },
     modalCancel() {
       this.modalSubmitLoading = false;
-      this.$refs.modelForm.resetFields();
     },
   },
 };

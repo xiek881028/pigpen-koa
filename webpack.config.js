@@ -12,7 +12,8 @@ const WebpackMiniCssExtractPlugin = require('mini-css-extract-plugin');
 const WebpackHtmlPlugin = require('html-webpack-plugin');
 const WebpackOptimizeCSSAssetsPlugin = require("optimize-css-assets-webpack-plugin");
 const WebpackUglifyjsPlugin = require('uglifyjs-webpack-plugin');
-const WebpackVueLoaderPlugin = require('vue-loader/lib/plugin');
+const VueLoaderPlugin = require('vue-loader/dist/plugin').default;
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 function resolve(dir) {
   return path.join(__dirname, dir);
@@ -191,19 +192,19 @@ module.exports = (env, argv) => {
       ],
     },
     plugins: [
+      new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
       new webpack.optimize.OccurrenceOrderPlugin(),
-      new WebpackVueLoaderPlugin(),
+      new VueLoaderPlugin(),
       new WebpackMiniCssExtractPlugin({
         chunkFilename: `css/${this.prod ? `[name].[contenthash].chunk.min.css` : `[name].chunk.css`}`,
         filename: `css/${this.prod ? `[name].[contenthash].min.css` : `[name].css`}`,
       }),
-    ].concat([
       new WebpackHtmlPlugin({
         template: resolve('src/html/index.pug'),
         filename: 'index.html',
         chunks: ['common'],
       }),
-    ]
-    ),
+      this.prod ? new BundleAnalyzerPlugin() : () => {},
+    ],
   };
 }

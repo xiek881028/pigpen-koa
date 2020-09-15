@@ -11,7 +11,7 @@ import '@src/css/theme.less';
 import '@src/css/common.less';
 
 import Vue from 'vue';
-import { message } from 'ant-design-vue';
+import { message, Form } from 'ant-design-vue';
 import pages from '../pages';
 import BaseTransitionBox from '../pages/components/BaseTransitionBox.vue';
 import store from '@src/js/store';
@@ -33,7 +33,6 @@ import store from '@src/js/store';
 //   duration: 2,
 //   top: 30,
 // });
-Vue.prototype.$message = message;
 
 // 自定义指令权限控制(只能控制显示隐藏，无法阻止组件渲染以及中止生命周期)
 // Vue.directive('p', {
@@ -55,11 +54,16 @@ Vue.prototype.$message = message;
 //   },
 // });
 
-new Vue({
-  el: '#app',
-  store,
-  router: pages,
-  components: {
-    BaseTransitionBox
-  },
+const app = Vue.createApp(BaseTransitionBox, {
+  enterClass: 'zoomIn slow2',
+  leaveClass: 'zoomOut',
+});
+app.use(store);
+app.use(pages);
+// app.prototype.$message = message;
+// app.use(message);
+app.use(Form);
+app.config.globalProperties.$message = message;
+pages.isReady().then(() => {
+  app.mount('#app');
 });

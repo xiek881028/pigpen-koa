@@ -5,13 +5,13 @@
 */
 
 <template lang="pug">
-  svg.icon(aria-hidden="true")
-    use(:xlink:href="`#${type}`")
+svg.icon(aria-hidden="true")
+  use(:xlink:href="`#${type}`")
 </template>
 
 <script>
 import '@src/assets/iconfont/iconfont';
-export default{
+export default {
   props: {
     type: String
   }

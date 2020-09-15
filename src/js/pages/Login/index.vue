@@ -1,39 +1,31 @@
 <template lang="pug">
-  div(is="LayoutBlank")
-    .indexBox
-      .infoBox
-        .title 八嘎猪管理后台
-        Form.form(:form="form" @submit="submitForm")
-          FormItem
-            Input(
-              placeholder="用户名"
-              v-decorator=['username', {
-                rules: [
-                  {required: true, message: '请输入用户名'},
-                ],
-                validateTrigger: 'blur',
-              }]
-            )
-              Icon.inputIcon(slot="prefix" type="user")
-          FormItem
-            Input(
-              placeholder="密码"
-              type="password"
-              v-decorator=['password', {
-                rules: [
-                  {required: true, message: '请输入密码'},
-                  {min: 6, message: '密码不能少于6位'}
-                ],
-                validateTrigger: 'blur',
-              }]
-            )
-              Icon.inputIcon(slot="prefix" type="lock")
-          FormItem
-            Button(type="primary" html-type="submit" block) 登录
-      canvas(id="evanyou-canvas")
+component(is="LayoutBlank")
+  .indexBox
+    .infoBox
+      .title 八嘎猪管理后台
+      Form.form(ref="form" :rules="rules" :model="form" @finish="finishForm")
+        FormItem(name="username")
+          Input(
+            placeholder="用户名"
+            v-model:value="form.username"
+          )
+            template(v-slot:prefix)
+              UserOutlined
+        FormItem(name="password")
+          Input(
+            placeholder="密码"
+            type="password"
+            v-model:value="form.password"
+          )
+            template(v-slot:prefix)
+              LockOutlined
+        FormItem
+          Button(type="primary" htmlType="submit" block :loading="loading") 登录
+    canvas(id="evanyou-canvas")
 </template>
 
 <script>
+import { UserOutlined, LockOutlined } from "@ant-design/icons-vue";
 import LayoutBlank from "../components/LayoutBlank.vue";
 import Evanyou from "@src/assets/evanyou.js";
 import { Form, Input, Icon, Button } from "ant-design-vue";
@@ -48,27 +40,46 @@ export default {
     Input,
     Icon,
     Button,
+    UserOutlined,
+    LockOutlined,
   },
-  beforeCreate() {
-    this.form = this.$form.createForm(this, { name: "login_form" });
+  data() {
+    return {
+      form: {
+        username: "",
+        password: "",
+      },
+      rules: {
+        username: [
+          { required: true, message: "请输入用户名", trigger: "blur" },
+        ],
+        password: [
+          { required: true, message: "请输入密码", trigger: "blur" },
+          { min: 6, message: "密码不能少于6位", trigger: "blur" },
+        ],
+      },
+      loading: false,
+    };
   },
   mounted() {
     Evanyou();
   },
   methods: {
-    submitForm(e = event) {
-      e.preventDefault();
-      this.form.validateFields(async (err, data) => {
-        if (!err) {
-          try {
-            await this.$store.dispatch("user/login", data);
-            await hasPermission([]);
-            this.$router.push("/");
-          } catch (error) {
-            this.$message.error(error);
-          }
-        }
-      });
+    // submitForm(e = event) {
+    //   e.preventDefault();
+    //   this.$refs.form.validate();
+    // },
+    async finishForm() {
+      if(this.loading) return;
+      this.loading = true;
+      try {
+        await this.$store.dispatch("user/login", this.form);
+        await hasPermission([]);
+        this.$router.push("/");
+        this.loading = false;
+      } catch (error) {
+        this.$message.error(error);
+      }
     },
   },
 };

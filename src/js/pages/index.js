@@ -1,7 +1,8 @@
 import { routes } from './router';
+const { createRouter, createWebHistory } = VueRouter;
 
-const router = new VueRouter({
-  mode: 'history',
+const router = createRouter({
+  history: createWebHistory(),
   routes,
 });
 
